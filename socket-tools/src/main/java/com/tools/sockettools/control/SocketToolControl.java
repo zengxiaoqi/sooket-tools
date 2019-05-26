@@ -1,6 +1,7 @@
 package com.tools.sockettools.control;
 
 import com.tools.sockettools.common.util.ObjectMapUtil;
+import com.tools.sockettools.tcp.client.Client;
 import com.tools.sockettools.tcp.start.Adapter;
 import com.tools.sockettools.tcp.start.Server;
 import com.tools.sockettools.tcp.start.TcpConnShortServer;
@@ -44,17 +45,60 @@ public class SocketToolControl {
         return null;
     }
 
-    @RequestMapping(value="/stopServer",method = RequestMethod.POST)
+    @RequestMapping(value="/createClient",method = RequestMethod.POST)
     @ResponseBody
-    public byte[] stopServer(@RequestBody Map<String,Object> config) {
+    public byte[] createClient(@RequestBody Map<String,Object> config) {
         try {
-            Adapter adapter = adapterMap.get(config.get("Address"));
-            adapter.stop();
+            Client client = new Client();
+            Socket socket = client.createClient(config);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return null;
+    }
+
+    @RequestMapping(value="/stopClient",method = RequestMethod.POST)
+    @ResponseBody
+    public byte[] stopClient(@RequestBody Map<String,Object> config) {
+        Socket socket = null;
+        try {
+            socket = Client.connectMap.get((String)config.get("id"));
+            if(socket!=null) {
+                socket.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @RequestMapping(value="/stopServer",method = RequestMethod.POST)
+    @ResponseBody
+    public byte[] stopServer(@RequestBody Map<String,Object> config) {
+        Socket socket = null;
+        try {
+            socket = Server.connectMap.get((String)config.get("id"));
+            if(socket!=null) {
+                socket.close();
+            }
+            /*Adapter adapter = adapterMap.get(config.get("Address"));
+            adapter.stop();*/
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    @RequestMapping(value="/sendMsg",method = RequestMethod.POST)
+    @ResponseBody
+    public String sendMsg(@RequestBody Map<String,Object> config) {
+        Client client = new Client();
+        Socket socket = Client.connectMap.get((String)config.get("id"));
+        String rspMsg = client.sendMsg(socket,(String)config.get("sendMsg"));
+
+        return rspMsg;
     }
 
     @RequestMapping(value="/sendRespons",method = RequestMethod.POST)
@@ -83,8 +127,8 @@ public class SocketToolControl {
                     pw.close();
                 if(os!=null)
                     os.close();
-                if(socket!=null)
-                    socket.close();
+                /*if(socket!=null)
+                    socket.close();*/
             } catch (IOException e) {
                 e.printStackTrace();
             }

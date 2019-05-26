@@ -51,6 +51,7 @@ public class Server {
                 log.debug("accpt :"+ socket.toString());
                 connectMap.put(id,socket);
                 //创建一个新的线程
+
                 ServerThread serverThread=new ServerThread(socket);
                 //启动线程
                 serverThread.start();
