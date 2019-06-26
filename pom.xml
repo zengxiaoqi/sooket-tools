@@ -7,6 +7,7 @@
     <groupId>socketTools</groupId>
     <artifactId>socketTools</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <modules>
         <module>socket-tools</module>
