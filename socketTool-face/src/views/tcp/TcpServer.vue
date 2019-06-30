@@ -122,7 +122,7 @@ export default {
                 data: []
             },
             param: {
-              "id": ""
+              id: ""
             },
             //显示或隐藏编辑页面
             editFormVisible: false,
@@ -242,7 +242,7 @@ export default {
         rowClick(row) {
             let _this = this;
             //根据选中行的ID找到发送消息框和接收消息框的对应关系
-            console.log("---------"+row["id"]);
+            //console.log("---------"+row.id);
             _this.currentRow = row;
             _this.hasRowSelect = true;
         },
