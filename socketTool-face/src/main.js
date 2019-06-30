@@ -14,7 +14,7 @@ import '@/styles/index.scss' // global css
 import '@/icons' // icon
 
 // 生产环境中注释掉以下语句
-import '../mock/index.js'
+//import '../mock/index.js'
 
 
 import store from './store/'

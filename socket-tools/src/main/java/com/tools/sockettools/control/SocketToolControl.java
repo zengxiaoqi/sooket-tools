@@ -15,7 +15,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,10 +27,12 @@ import java.util.Map;
 public class SocketToolControl {
     private Map<String, Adapter> adapterMap = new HashMap<>();
     private Map<String, Selector> selectionMap = new HashMap<>();
+    private List<Map<String,Object>> serverList = new ArrayList<>();
 
     @RequestMapping(value="/createServer",method = RequestMethod.POST)
     @ResponseBody
-    public byte[] createServer(@RequestBody Map<String,Object> config) {
+    public ReturnResult createServer(@RequestBody Map<String,Object> config) {
+        ReturnResult returnResult = new ReturnResult();
         try {
             //Map<String, Object> config = ObjectMapUtil.objectToMap(object);
             /*TcpConnShortServer tcpConnShortServer = new TcpConnShortServer(config);
@@ -36,13 +40,26 @@ public class SocketToolControl {
             adapterMap.put((String)config.get("Address"), tcpConnShortServer);
             selectionMap.put((String)config.get("Address"), selector);*/
             Server server = new Server();
-            ServerSocket serverSocket = server.createServer(config);
-            server.start(serverSocket);
+            ServerSocket finalServerSocket = server.createServer(config);
+            Thread thread = new Thread(){
+                @Override
+                public void run(){
+                    server.start(finalServerSocket);
+                }
+            };
+            thread.start();
+            returnResult.setSuccess(true);
+
+            config.put("status", "open");
+            serverList.add(config);
+            returnResult.setData(serverList);
         } catch (Exception e) {
             e.printStackTrace();
+            returnResult.setSuccess(false);
+            returnResult.setMessage("新建服务失败："+e.getMessage());
         }
 
-        return null;
+        return returnResult;
     }
 
     @RequestMapping(value="/createClient",method = RequestMethod.POST)
@@ -74,22 +91,32 @@ public class SocketToolControl {
         return null;
     }
 
-    @RequestMapping(value="/stopServer",method = RequestMethod.POST)
+    @RequestMapping(value="/stopServer",method = RequestMethod.GET)
     @ResponseBody
-    public byte[] stopServer(@RequestBody Map<String,Object> config) {
+    public ReturnResult stopServer(@RequestParam("id") String id) {
         Socket socket = null;
+        ReturnResult returnResult = new ReturnResult();
         try {
-            socket = Server.connectMap.get((String)config.get("id"));
+            socket = Server.connectMap.get(id);
             if(socket!=null) {
                 socket.close();
+                returnResult.setSuccess(true);
             }
+            for(Map<String,Object> server : serverList){
+                if(server.get("id").equals(id)){
+                    server.put("status", "close");
+                }
+            }
+            returnResult.setData(serverList);
             /*Adapter adapter = adapterMap.get(config.get("Address"));
             adapter.stop();*/
         } catch (Exception e) {
             e.printStackTrace();
+            returnResult.setSuccess(false);
+            returnResult.setMessage("关闭服务失败："+e.getMessage());
         }
 
-        return null;
+        return returnResult;
     }
     @RequestMapping(value="/sendMsg",method = RequestMethod.POST)
     @ResponseBody
@@ -135,5 +162,25 @@ public class SocketToolControl {
         }
 
         return null;
+    }
+
+    @RequestMapping(value="/getServerList",method = RequestMethod.GET)
+    @ResponseBody
+    public ReturnResult getServerList() {
+        ReturnResult returnResult = new ReturnResult();
+
+        returnResult.setSuccess(true);
+        returnResult.setData(serverList);
+        return returnResult;
+    }
+
+    @RequestMapping(value="/getRcvMsg",method = RequestMethod.GET)
+    @ResponseBody
+    public ReturnResult getRcvMsg(@RequestParam("id") String id) {
+        ReturnResult returnResult = new ReturnResult();
+
+        returnResult.setSuccess(true);
+        returnResult.setData("测试。。。");
+        return returnResult;
     }
 }

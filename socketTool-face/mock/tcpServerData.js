@@ -33,7 +33,7 @@ var rcvMsg = {
 }
 export default[
     {
-        path: '/TcpServerData',
+        path: '/getServerList',
         data: rspData,
     },
     {

@@ -5,7 +5,7 @@
     <!-- 工具条 -->
     <el-button type="primary" @click="addTcpServer" >新增</el-button>
     <el-button type="primary" @click="addTcpServer" >启动监听</el-button>
-    <el-button type="primary" @click="addTcpServer" >停止监听</el-button>
+    <el-button type="primary" @click="closeServer" >停止监听</el-button>
     <el-button type="primary" @click="sendData" >发送数据</el-button>
     <el-row>
         <el-col :span="10">
@@ -122,7 +122,7 @@ export default {
                 data: []
             },
             param: {
-              id: ""
+              "id": ""
             },
             //显示或隐藏编辑页面
             editFormVisible: false,
@@ -227,7 +227,9 @@ export default {
                     let params = {};
                     if (_this.isAdd) {
                         createServer(model).then(response => {
-                          _this.$message.success("创建服务端成功")
+                          _this.$message.success("创建服务端成功");
+                            _this.editFormVisible = false;
+                            this.tableData.data = response.data;
                         });
                     } else {
 
@@ -276,16 +278,30 @@ export default {
             let _this = this;
             //根据当前选择行去后台请求数据
             if(_this.currentRow != null) {
-                _this.param.id = _this.currentRow["id"];
-                getRcvMsg(_this.param).then(response => {
+                //_this.param.id = _this.currentRow["id"];
+                let param = {"id": _this.currentRow["id"]}
+                getRcvMsg(param).then(response => {
                         //_this.$message.success("接收数据成功");
                         console.log("接收数据: "+response.data);
                         _this.recvMsg = response.data;
                     }
                 );
             }
-        }
-
+        },
+        closeServer(){
+            let _this = this;
+            if(_this.currentRow != null) {
+                _this.param.id = _this.currentRow["id"];
+                closeServer(_this.param).then(response => {
+                        _this.$message.success("服务关闭成功");
+                        //console.log("接收数据: "+response.data);
+                        _this.tableData.data = response.data;
+                    }
+                );
+            }else {
+                _this.$message.warning("请选择一行数据")
+            }
+        },
     },
 }
 </script>

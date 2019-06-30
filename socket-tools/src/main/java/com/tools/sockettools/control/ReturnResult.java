@@ -17,7 +17,8 @@ public class ReturnResult {
 
     private String errorCode;
     
-    private Map<String, Object> data;
+    //private Map<String, Object> data;
+    private Object data;
     
     public ReturnResult(){}
     
@@ -39,13 +40,13 @@ public class ReturnResult {
         this.root = root;
     }
     
-    public ReturnResult(Boolean success, Map<String, Object> data, String message){
+    public ReturnResult(Boolean success, Object data, String message){
         this.success = success;
         this.message = message;
         this.data = data;
     }
     
-    public ReturnResult(Boolean success, Map<String, Object> data){
+    public ReturnResult(Boolean success, Object data){
         this.success = success;
         this.data = data;
     }
@@ -68,11 +69,11 @@ public class ReturnResult {
     }
     
     
-    public static ReturnResult success(Map<String, Object> data) {
+    public static ReturnResult success(Object data) {
         return (new ReturnResult(true, data));
     }
 
-    public static ReturnResult success(Map<String, Object> retData, String msg) {
+    public static ReturnResult success(Object retData, String msg) {
         return (new ReturnResult(true, retData, msg));
     }
     
@@ -133,11 +134,11 @@ public class ReturnResult {
         this.root = root;
     }
 
-    public Map<String, Object> getData() {
+    public Object getData() {
         return data;
     }
 
-    public void setData(Map<String, Object> data) {
+    public void setData(Object data) {
         this.data = data;
     }
 }

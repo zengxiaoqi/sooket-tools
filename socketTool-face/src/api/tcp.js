@@ -1,10 +1,10 @@
 import request from '@/utils/request'
 
-export function getServerInfo(params) {
+export function getServerInfo() {
   return request({
-    url: '/TcpServerData',
-    method: 'post',
-    params
+    url: '/getServerList',
+    method: 'get',
+    params: {},
   })
 }
 
@@ -24,10 +24,18 @@ export function sendData(data) {
   })
 }
 
-export function getRcvMsg(param) {
+export function getRcvMsg(params) {
     return request({
         url: '/getRcvMsg',
         method: 'get',
-        param
+        params:params
+    })
+}
+
+export function closeServer(params) {
+    return request({
+        url: '/stopServer',
+        method: 'get',
+        params:params
     })
 }
