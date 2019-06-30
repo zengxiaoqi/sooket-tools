@@ -7,8 +7,15 @@ import ElementUI from 'element-ui'
 
 import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
+//element-ui css 不然无法显示左侧菜单栏数据
+import 'element-ui/lib/theme-chalk/index.css'
+
 import '@/styles/index.scss' // global css
 import '@/icons' // icon
+
+// 生产环境中注释掉以下语句
+import '../mock/index.js'
+
 
 import store from './store/'
 Vue.config.productionTip = false

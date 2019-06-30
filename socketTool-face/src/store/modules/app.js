@@ -5,7 +5,8 @@ const state = {
     opened: Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true,
     withoutAnimation: false
   },
-  device: 'desktop'
+  device: 'desktop',
+  serverInfo: new Map(),
 }
 
 const mutations = {
@@ -25,7 +26,10 @@ const mutations = {
   },
   TOGGLE_DEVICE: (state, device) => {
     state.device = device
-  }
+  },
+  SET_SERVER_INFO: (state, data) => {
+    state.serverInfo.set(data.id, data);
+  },
 }
 
 const actions = {
@@ -37,6 +41,9 @@ const actions = {
   },
   toggleDevice({ commit }, device) {
     commit('TOGGLE_DEVICE', device)
+  },
+  setServerInfo({ commit }, data){
+    commit('SET_SERVER_INFO', data)
   }
 }
 
