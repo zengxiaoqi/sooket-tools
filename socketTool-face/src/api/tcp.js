@@ -32,6 +32,15 @@ export function getRcvMsg(params) {
     })
 }
 
+
+export function startServer(data) {
+    return request({
+        url: '/createServer',
+        method: 'post',
+        data
+    })
+}
+
 export function closeServer(params) {
     return request({
         url: '/stopServer',

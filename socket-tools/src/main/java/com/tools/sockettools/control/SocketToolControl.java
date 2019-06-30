@@ -15,19 +15,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Administrator
  */
 @RestController
 public class SocketToolControl {
-    private Map<String, Adapter> adapterMap = new HashMap<>();
+    private Map<String, ServerSocket> adapterMap = new HashMap<>();
     private Map<String, Selector> selectionMap = new HashMap<>();
     private List<Map<String,Object>> serverList = new ArrayList<>();
+    //private Set<Map<String,Object>> serverList = new HashSet();
 
     @RequestMapping(value="/createServer",method = RequestMethod.POST)
     @ResponseBody
@@ -50,8 +48,21 @@ public class SocketToolControl {
             thread.start();
             returnResult.setSuccess(true);
 
+            adapterMap.put((String)config.get("id"), finalServerSocket);
+
             config.put("status", "open");
-            serverList.add(config);
+
+            String id = (String)config.get("id");
+            boolean flag = false;
+            for(Map<String,Object> sevr : serverList){
+                if(sevr.get("id").equals(id)){
+                    sevr.put("status", "open");
+                    flag = true;
+                }
+            }
+            if(!flag) {
+                serverList.add(config);
+            }
             returnResult.setData(serverList);
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,13 +105,16 @@ public class SocketToolControl {
     @RequestMapping(value="/stopServer",method = RequestMethod.GET)
     @ResponseBody
     public ReturnResult stopServer(@RequestParam("id") String id) {
-        Socket socket = null;
+        ServerSocket socket = null;
         ReturnResult returnResult = new ReturnResult();
         try {
-            socket = Server.connectMap.get(id);
+            socket = adapterMap.get(id);
             if(socket!=null) {
                 socket.close();
                 returnResult.setSuccess(true);
+            }else {
+                returnResult.setSuccess(false);
+                returnResult.setMessage("关闭服务失败：id["+id+"]不存在");
             }
             for(Map<String,Object> server : serverList){
                 if(server.get("id").equals(id)){

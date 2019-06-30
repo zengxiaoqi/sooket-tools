@@ -4,7 +4,7 @@
 
     <!-- 工具条 -->
     <el-button type="primary" @click="addTcpServer" >新增</el-button>
-    <el-button type="primary" @click="addTcpServer" >启动监听</el-button>
+    <el-button type="primary" @click="startServer" >启动监听</el-button>
     <el-button type="primary" @click="closeServer" >停止监听</el-button>
     <el-button type="primary" @click="sendData" >发送数据</el-button>
     <el-row>
@@ -98,7 +98,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { getServerInfo,createServer,sendData,getRcvMsg } from '@/api/tcp'
+import { getServerInfo,createServer,sendData,getRcvMsg,closeServer } from '@/api/tcp'
 
 export default {
     name: "TcpServer",
@@ -288,6 +288,24 @@ export default {
                 );
             }
         },
+
+        startServer(){
+            let _this = this;
+            if(_this.currentRow != null) {
+                createServer(_this.currentRow).then(response => {
+                        _this.$message.success("启动监听成功");
+                        //console.log("接收数据: "+response.data);
+                        _this.tableData.data = response.data;
+                    }
+                ).catch(
+                    response => {
+                        console.log('catch data::', response)
+                    });
+            }else {
+                _this.$message.warning("请选择一行数据")
+            }
+        },
+
         closeServer(){
             let _this = this;
             if(_this.currentRow != null) {
@@ -297,7 +315,10 @@ export default {
                         //console.log("接收数据: "+response.data);
                         _this.tableData.data = response.data;
                     }
-                );
+                ).catch(
+                    response => {
+                        console.log('catch data::', response)
+                    });
             }else {
                 _this.$message.warning("请选择一行数据")
             }
