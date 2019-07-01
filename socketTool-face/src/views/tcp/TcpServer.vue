@@ -1,13 +1,14 @@
 <template>
 <div>
-    <!-- 搜索 -->
-
     <!-- 工具条 -->
     <el-button type="primary" @click="addTcpServer" >新增</el-button>
     <el-button type="primary" @click="startServer" >启动监听</el-button>
     <el-button type="primary" @click="closeServer" >停止监听</el-button>
     <el-button type="primary" @click="sendData" >发送数据</el-button>
     <el-row>
+        <el-col :span="4">
+            <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+        </el-col>
         <el-col :span="10">
             <!-- 表格体 -->
           <el-table
@@ -57,7 +58,6 @@
                 </el-table-column>&ndash;&gt;
             </el-table>-->
         </el-col>
-      <el-col :span="4"></el-col>
         <el-col :span="10">
             <div v-if="hasRowSelect">
                 接收消息:
@@ -113,6 +113,45 @@ export default {
     },
     data() {
         return {
+            data: [{
+                label: '一级 1',
+                children: [{
+                    label: '二级 1-1',
+                    children: [{
+                        label: '三级 1-1-1'
+                    }]
+                }]
+            }, {
+                label: '一级 2',
+                children: [{
+                    label: '二级 2-1',
+                    children: [{
+                        label: '三级 2-1-1'
+                    }]
+                }, {
+                    label: '二级 2-2',
+                    children: [{
+                        label: '三级 2-2-1'
+                    }]
+                }]
+            }, {
+                label: '一级 3',
+                children: [{
+                    label: '二级 3-1',
+                    children: [{
+                        label: '三级 3-1-1'
+                    }]
+                }, {
+                    label: '二级 3-2',
+                    children: [{
+                        label: '三级 3-2-1'
+                    }]
+                }]
+            }],
+            defaultProps: {
+                children: 'children',
+                label: 'label'
+            },
           loading: true,  //v-loading在接口为请求到数据之前，显示加载中，直到请求到数据后消失
             searchForm: {
                 type: '',
@@ -176,6 +215,9 @@ export default {
         ...mapGetters(['serverInfo'])
     },
     methods: {
+        handleNodeClick(data) {
+            console.log(data);
+        },
         // 获取table数据
         getTableData() {
           getServerInfo().then(response => {

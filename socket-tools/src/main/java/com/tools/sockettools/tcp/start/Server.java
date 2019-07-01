@@ -49,6 +49,7 @@ public class Server {
                 socket=serverSocket.accept();
 
                 log.debug("accpt :"+ socket.toString());
+
                 connectMap.put(id,socket);
                 //创建一个新的线程
 

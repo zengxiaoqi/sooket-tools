@@ -21,7 +21,7 @@ import java.util.*;
  * @author Administrator
  */
 @RestController
-public class SocketToolControl {
+public class TcpServerControl {
     private Map<String, ServerSocket> adapterMap = new HashMap<>();
     private Map<String, Selector> selectionMap = new HashMap<>();
     private List<Map<String,Object>> serverList = new ArrayList<>();
@@ -48,6 +48,7 @@ public class SocketToolControl {
             thread.start();
             returnResult.setSuccess(true);
 
+            //保存监听返回的 ServerSocket ，供后续关闭使用
             adapterMap.put((String)config.get("id"), finalServerSocket);
 
             config.put("status", "open");
@@ -56,11 +57,13 @@ public class SocketToolControl {
             boolean flag = false;
             for(Map<String,Object> sevr : serverList){
                 if(sevr.get("id").equals(id)){
+                    //重新启动监听
                     sevr.put("status", "open");
                     flag = true;
                 }
             }
             if(!flag) {
+                //新建服务
                 serverList.add(config);
             }
             returnResult.setData(serverList);
@@ -71,35 +74,6 @@ public class SocketToolControl {
         }
 
         return returnResult;
-    }
-
-    @RequestMapping(value="/createClient",method = RequestMethod.POST)
-    @ResponseBody
-    public byte[] createClient(@RequestBody Map<String,Object> config) {
-        try {
-            Client client = new Client();
-            Socket socket = client.createClient(config);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    @RequestMapping(value="/stopClient",method = RequestMethod.POST)
-    @ResponseBody
-    public byte[] stopClient(@RequestBody Map<String,Object> config) {
-        Socket socket = null;
-        try {
-            socket = Client.connectMap.get((String)config.get("id"));
-            if(socket!=null) {
-                socket.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     @RequestMapping(value="/stopServer",method = RequestMethod.GET)
@@ -131,15 +105,6 @@ public class SocketToolControl {
         }
 
         return returnResult;
-    }
-    @RequestMapping(value="/sendMsg",method = RequestMethod.POST)
-    @ResponseBody
-    public String sendMsg(@RequestBody Map<String,Object> config) {
-        Client client = new Client();
-        Socket socket = Client.connectMap.get((String)config.get("id"));
-        String rspMsg = client.sendMsg(socket,(String)config.get("sendMsg"));
-
-        return rspMsg;
     }
 
     @RequestMapping(value="/sendRespons",method = RequestMethod.POST)
