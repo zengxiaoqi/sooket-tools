@@ -53,7 +53,7 @@ export const constantRoutes =[
         name: 'tcp-client',
         component: () => import('@/views/tcp/TcpClient'),
         meta: { title: 'tcp-client', icon: 'server' }
-      }
+      },
     ]
   },
   {

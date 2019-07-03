@@ -2,17 +2,16 @@
 <div>
     <!-- 工具条 -->
     <el-button type="primary" @click="addTcpServer" >新增</el-button>
-    <el-button type="primary" @click="startServer" >启动监听</el-button>
-    <el-button type="primary" @click="closeServer" >停止监听</el-button>
+    <el-button type="primary" :disabled="isOpen" @click="startServer" >启动监听</el-button>
+    <el-button type="primary" :disabled="!isOpen" @click="closeServer" >停止监听</el-button>
     <el-button type="primary" @click="sendData" >发送数据</el-button>
     <el-row>
         <el-col :span="4">
-            <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+            <el-tree :data="treeData" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
         </el-col>
         <el-col :span="10">
             <!-- 表格体 -->
           <el-table
-            v-loading="loading"
             :data="tableData.data"
             element-loading-text="Loading"
             border
@@ -40,23 +39,7 @@
                 <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
               </template>
             </el-table-column>
-
           </el-table>
-            <!--<el-table v-loading="loading" :data="tableData.data" border :default-sort="{prop: 'index', order: 'descending'}"
-                      highlight-current-row
-                      @current-change="rowClick">
-                <el-table-column type="index" label="序号" width="64" align="center"></el-table-column>
-                &lt;!&ndash;<el-table-column v-for="(item,index) in tableData.head" :prop="item.key" :label="item.name" sortable :key="index"></el-table-column>&ndash;&gt;
-                <el-table-column prop="id" label="ID" align="center"></el-table-column>
-                <el-table-column prop="port" label="端口" align="center" sortable></el-table-column>
-                <el-table-column prop="statue" label="状态" align="center" sortable></el-table-column>
-                &lt;!&ndash;<el-table-column label="操作" align="center" >
-                    <template slot-scope="scope" >
-                        <el-button  size="mini" @click="handleEdit(scope.$index, scope.row,false)" >启动监听</el-button>
-                        <el-button  size="mini" @click="handleEdit(scope.$index, scope.row,false)" >停止监听</el-button>
-                    </template>
-                </el-table-column>&ndash;&gt;
-            </el-table>-->
         </el-col>
         <el-col :span="10">
             <div v-if="hasRowSelect">
@@ -75,8 +58,8 @@
             <!--el-form 的ref值必须为editForm -->
             <el-form :model="editFormModel" label-width="80px" :rules="editFormRules" ref="editFormModel">
                 <el-col :span="12">
-                    <el-form-item label="主键名称：" prop="id" label-width="100px">
-                        <el-input clearable v-model="editFormModel.id" :readonly="readonly"></el-input>
+                    <el-form-item label="监听IP：" prop="ip" label-width="100px">
+                        <el-input v-model="localIP" :disabled="true"></el-input>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -98,7 +81,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { getServerInfo,createServer,sendData,getRcvMsg,closeServer } from '@/api/tcp'
+import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP } from '@/api/tcp'
 
 export default {
     name: "TcpServer",
@@ -113,44 +96,20 @@ export default {
     },
     data() {
         return {
-            data: [{
-                label: '一级 1',
+            isOpen: true,
+            /*treeData: [{
+                id: '一级 1',
+                leaf: false,
                 children: [{
-                    label: '二级 1-1',
-                    children: [{
-                        label: '三级 1-1-1'
-                    }]
+                    id: '二级 1-1',
+                    leaf: true,
+                    children: []
                 }]
-            }, {
-                label: '一级 2',
-                children: [{
-                    label: '二级 2-1',
-                    children: [{
-                        label: '三级 2-1-1'
-                    }]
-                }, {
-                    label: '二级 2-2',
-                    children: [{
-                        label: '三级 2-2-1'
-                    }]
-                }]
-            }, {
-                label: '一级 3',
-                children: [{
-                    label: '二级 3-1',
-                    children: [{
-                        label: '三级 3-1-1'
-                    }]
-                }, {
-                    label: '二级 3-2',
-                    children: [{
-                        label: '三级 3-2-1'
-                    }]
-                }]
-            }],
+            }, ],*/
             defaultProps: {
                 children: 'children',
-                label: 'label'
+                label: 'id',
+                isLeaf: 'leaf'
             },
           loading: true,  //v-loading在接口为请求到数据之前，显示加载中，直到请求到数据后消失
             searchForm: {
@@ -170,12 +129,13 @@ export default {
             title: "新建服务端",
             titleTip: "TCP SERVER",
             defaultValues: {
-                id: "",
+                ip: this.localIP,
                 port: ""
             },
             //form表单绑定的对象
             editFormModel: {
                 id: "",
+                ip: "",
                 port: "",
                 statue: "",
                 recvMsg: "",
@@ -190,7 +150,7 @@ export default {
             },
             //弹框form表单校验规则
             editFormRules: {
-                id: [{ required: true, message: "该输入项为必填项!" }],
+                /*id: [{ required: true, message: "该输入项为必填项!" }],*/
                 port: [{ required: true, message: "该输入项为必填项!" }],
             },
             readonly: true,
@@ -201,26 +161,54 @@ export default {
             sendMsg: "",
             recvMsg: "",
             clearTimeSet: null,
+            localIP: document.location.hostname,
         }
     },
     mounted() {
-        this.getTableData();
+        //this.getTableData();
+        this.getIP();
         //设置定时任务-定时获取服务端接收的报文
         this.setTime();
+        //this.treeData = this.$store.state.websocket.serverList;
     },
     beforeDestroy() {    //页面关闭时清除定时器
         clearInterval(this.clearTimeSet);
     },
     computed: {
-        ...mapGetters(['serverInfo'])
+        ...mapGetters(['serverInfo']),
+        treeData(){
+            return this.$store.state.websocket.serverList;
+        }
+    },
+    watch: {
+        /*'serverList': function (newVal, oldVal) {
+            this.treeData = newVal.nodeTreeList;
+        }*/
     },
     methods: {
+        getIP() {
+            getIP().then(response => {
+                this.localIP = response.data;
+                this.editFormModel.ip = response.data;
+            })
+        },
         handleNodeClick(data) {
             console.log(data);
+            if(data.leaf) {
+                console.log("点击叶子节点，显示数据");
+                //this.getTableData(data.id);
+            }else {
+                let param = {id: data.id};
+                getServerInfo(param).then(response => {
+                    console.log(response.data);
+                    this.isOpen = response.data.status;
+                })
+            }
         },
         // 获取table数据
-        getTableData() {
-          getServerInfo().then(response => {
+        getTableData(id) {
+            let param = {id: id};
+          getServerInfo(param).then(response => {
             this.loading = false
             this.tableData.data = response.data
             response.data.forEach((value)=> {
@@ -242,7 +230,7 @@ export default {
             if (_this.$refs.editFormModel != undefined) {
                 _this.$refs.editFormModel.resetFields();
             }
-            _this.editFormModel = _this.defaultValues; //弹框默认值
+            //_this.editFormModel = _this.defaultValues; //弹框默认值
             if (row) {
                 _this.readonly = true;
                 _this.$nextTick(() => {
@@ -258,9 +246,9 @@ export default {
             let _this = this;
             let model = _this.$refs.editFormModel.model;
 
-            _this.setModel2Object(model);
+            //_this.setModel2Object(model);
             //_this.$store.commit("setServerInfo", _this.tmpServerInfo)
-          _this.$store.dispatch('app/setServerInfo', _this.tmpServerInfo)
+          _this.$store.dispatch('app/setServerInfo', model)
             //_this.serverInfo.set(model.id, _this.tmpServerInfo);  //保存服务信息
 
             _this.$refs.editFormModel.validate(valid => {
@@ -271,7 +259,9 @@ export default {
                         createServer(model).then(response => {
                           _this.$message.success("创建服务端成功");
                             _this.editFormVisible = false;
-                            this.tableData.data = response.data;
+                            _this.isOpen = false;
+                            //this.tableData.data = response.data;
+                            _this.treeData = response.data;
                         });
                     } else {
 
@@ -279,7 +269,6 @@ export default {
                 }
             });
         },
-
 
         rowClick(row) {
             let _this = this;
@@ -356,6 +345,7 @@ export default {
                         _this.$message.success("服务关闭成功");
                         //console.log("接收数据: "+response.data);
                         _this.tableData.data = response.data;
+                        _this.isOpen = false;
                     }
                 ).catch(
                     response => {

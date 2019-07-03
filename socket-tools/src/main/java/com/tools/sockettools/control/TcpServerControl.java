@@ -1,13 +1,17 @@
 package com.tools.sockettools.control;
 
 import com.tools.sockettools.common.util.ObjectMapUtil;
+import com.tools.sockettools.entity.NodeTree;
+import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.tcp.client.Client;
 import com.tools.sockettools.tcp.start.Adapter;
 import com.tools.sockettools.tcp.start.Server;
 import com.tools.sockettools.tcp.start.TcpConnShortServer;
 
+import org.springframework.http.HttpRequest;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -24,19 +28,25 @@ import java.util.*;
 public class TcpServerControl {
     private Map<String, ServerSocket> adapterMap = new HashMap<>();
     private Map<String, Selector> selectionMap = new HashMap<>();
-    private List<Map<String,Object>> serverList = new ArrayList<>();
+    //private List<Map<String,Object>> serverList = new ArrayList<>();
+    private Map<String, ServerInfo> serverList = new HashMap<String, ServerInfo>();   //根据ID 保存服务端状态
     //private Set<Map<String,Object>> serverList = new HashSet();
+    private static List<NodeTree> nodeTreeList = new ArrayList<>();
+
+    @RequestMapping(value="/getIP",method = RequestMethod.GET)
+    @ResponseBody
+    public ReturnResult getIP(HttpServletRequest httpRequest) {
+        return ReturnResult.success((Object)httpRequest.getRemoteAddr());
+    }
 
     @RequestMapping(value="/createServer",method = RequestMethod.POST)
     @ResponseBody
     public ReturnResult createServer(@RequestBody Map<String,Object> config) {
         ReturnResult returnResult = new ReturnResult();
+
+        String id = String.format("%s:%s",config.get("ip"), config.get("port"));
+        config.put("id", id);
         try {
-            //Map<String, Object> config = ObjectMapUtil.objectToMap(object);
-            /*TcpConnShortServer tcpConnShortServer = new TcpConnShortServer(config);
-            Selector selector = tcpConnShortServer.start();
-            adapterMap.put((String)config.get("Address"), tcpConnShortServer);
-            selectionMap.put((String)config.get("Address"), selector);*/
             Server server = new Server();
             ServerSocket finalServerSocket = server.createServer(config);
             Thread thread = new Thread(){
@@ -48,25 +58,28 @@ public class TcpServerControl {
             thread.start();
             returnResult.setSuccess(true);
 
+            ServerInfo serverInfo = new ServerInfo();
             //保存监听返回的 ServerSocket ，供后续关闭使用
-            adapterMap.put((String)config.get("id"), finalServerSocket);
+            serverInfo.setId(id);
+            serverInfo.setServerSocket(finalServerSocket);
+            serverInfo.setStatus("open");
 
-            config.put("status", "open");
+            NodeTree nodeTree = new NodeTree();
+            nodeTree.setId(id);
+            nodeTree.setLeaf(false);
 
-            String id = (String)config.get("id");
-            boolean flag = false;
-            for(Map<String,Object> sevr : serverList){
-                if(sevr.get("id").equals(id)){
-                    //重新启动监听
-                    sevr.put("status", "open");
-                    flag = true;
-                }
-            }
-            if(!flag) {
+
+            if(serverList.get(id) == null) {
                 //新建服务
-                serverList.add(config);
+                serverList.put(id, serverInfo);
+                nodeTreeList.add(nodeTree);
+            }else {
+                //重启监听
+                serverList.get(id).setStatus("open");
             }
-            returnResult.setData(serverList);
+
+            //returnResult.setData(serverList);
+            returnResult.setData(nodeTreeList);
         } catch (Exception e) {
             e.printStackTrace();
             returnResult.setSuccess(false);
@@ -82,7 +95,7 @@ public class TcpServerControl {
         ServerSocket socket = null;
         ReturnResult returnResult = new ReturnResult();
         try {
-            socket = adapterMap.get(id);
+            socket = serverList.get(id).getServerSocket();
             if(socket!=null) {
                 socket.close();
                 returnResult.setSuccess(true);
@@ -90,14 +103,9 @@ public class TcpServerControl {
                 returnResult.setSuccess(false);
                 returnResult.setMessage("关闭服务失败：id["+id+"]不存在");
             }
-            for(Map<String,Object> server : serverList){
-                if(server.get("id").equals(id)){
-                    server.put("status", "close");
-                }
-            }
+            serverList.get(id).setStatus("close");
+
             returnResult.setData(serverList);
-            /*Adapter adapter = adapterMap.get(config.get("Address"));
-            adapter.stop();*/
         } catch (Exception e) {
             e.printStackTrace();
             returnResult.setSuccess(false);
@@ -119,11 +127,6 @@ public class TcpServerControl {
             pw = new PrintWriter(os);
             pw.write((String)config.get("sendData"));
             pw.flush();
-            /*Adapter adapter = adapterMap.get(config.get("Address"));
-            Selector selector = selectionMap.get(config.get("Address"));
-            String rspData = (String)config.get("sendData");
-            adapter.invoke(selector.selectedKeys().iterator().next(), rspData.getBytes());
-            selector.selectedKeys().iterator().remove();*/
         } catch (Exception e) {
             e.printStackTrace();
         }finally{
@@ -145,11 +148,11 @@ public class TcpServerControl {
 
     @RequestMapping(value="/getServerList",method = RequestMethod.GET)
     @ResponseBody
-    public ReturnResult getServerList() {
+    public ReturnResult getServerList(@RequestParam("id") String id) {
         ReturnResult returnResult = new ReturnResult();
 
         returnResult.setSuccess(true);
-        returnResult.setData(serverList);
+        returnResult.setData(serverList.get(id));
         return returnResult;
     }
 

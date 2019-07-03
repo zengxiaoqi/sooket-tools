@@ -1,6 +1,6 @@
 package com.tools.sockettools;
 
-import com.tools.sockettools.control.SocketToolControl;
+import com.tools.sockettools.control.TcpServerControl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,19 +19,19 @@ public class SocketToolsApplicationTests {
 
     @Test
     public void testServer(){
-        SocketToolControl socketToolControl = new SocketToolControl();
+        TcpServerControl tcpServerControl = new TcpServerControl();
         Map<String, Object> config = new HashMap<>();
         config.put("port", "20100");
         config.put("id", "001");
-        socketToolControl.createServer(config);
+        tcpServerControl.createServer(config);
     }
 
     @Test
     public void testSend(){
-        SocketToolControl socketToolControl = new SocketToolControl();
+        TcpServerControl tcpServerControl = new TcpServerControl();
         Map<String, Object> config = new HashMap<>();
         config.put("sendData", "suceess...");
         config.put("id", "001");
-        socketToolControl.sendRespons(config);
+        tcpServerControl.sendRespons(config);
     }
 }

@@ -1,10 +1,10 @@
 import request from '@/utils/request'
 
-export function getServerInfo() {
+export function getServerInfo(params) {
   return request({
     url: '/getServerList',
     method: 'get',
-    params: {},
+    params: params,
   })
 }
 
@@ -46,5 +46,13 @@ export function closeServer(params) {
         url: '/stopServer',
         method: 'get',
         params:params
+    })
+}
+
+export function getIP() {
+    return request({
+        url: '/getIP',
+        method: 'get',
+        params:{}
     })
 }
