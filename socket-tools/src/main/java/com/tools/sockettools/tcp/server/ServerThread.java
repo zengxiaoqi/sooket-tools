@@ -1,6 +1,10 @@
 package com.tools.sockettools.tcp.server;
 
 import com.tools.sockettools.common.util.DateUtil;
+import com.tools.sockettools.common.util.JsonUtils;
+import com.tools.sockettools.control.TcpServerControl;
+import com.tools.sockettools.entity.NodeTree;
+import com.tools.sockettools.websocket.WebSocket;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -53,6 +57,15 @@ public class ServerThread extends Thread {
             socket.shutdownInput();//关闭输入流
             System.out.println("客户端断开连接");
             //删除TcpServerControl.nodeTreeList中对应节点
+            String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
+            for(NodeTree pareNode : TcpServerControl.nodeTreeList) {
+                for(Object child : pareNode.getChildren()) {
+                    NodeTree childNode = (NodeTree)child;
+                    if(childNode.getId().equals(childId)){
+                        pareNode.removeChildren(childNode);
+                    }
+                }
+            }
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

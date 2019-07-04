@@ -21,6 +21,10 @@ public class BaseTree {
         children.add(item);
     }
 
+    public void removeChildren(BaseTree item) {
+        children.remove(item);
+    }
+
     public boolean hasChildren(){
         return (children != null) && (!children.isEmpty());
     }
