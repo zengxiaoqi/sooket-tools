@@ -7,6 +7,10 @@ const state = {
 }
 
 const mutations = {
+    SET_WEBSOCKET:(state, data) => {
+        state.websocket = data;
+    },
+
   SET_SERVER_LIST: (state, data) => {
     state.websocket.serverList = data;
   },
@@ -15,6 +19,9 @@ const mutations = {
 const actions = {
   setServerList({ commit }, data){
     commit('SET_SERVER_LIST', data)
+  },
+  setWebsocket({ commit }, data){
+    commit('SET_WEBSOCKET', data)
   }
 }
 

@@ -97,15 +97,7 @@ export default {
     data() {
         return {
             isOpen: true,
-            /*treeData: [{
-                id: '一级 1',
-                leaf: false,
-                children: [{
-                    id: '二级 1-1',
-                    leaf: true,
-                    children: []
-                }]
-            }, ],*/
+            treeData: [],
             defaultProps: {
                 children: 'children',
                 label: 'id',
@@ -175,10 +167,10 @@ export default {
         clearInterval(this.clearTimeSet);
     },
     computed: {
-        ...mapGetters(['serverInfo']),
-        treeData(){
-            return this.$store.state.websocket;
-        }
+        ...mapGetters(['serverInfo','websocket']),
+        /*treeData(){
+            return websocket.serverList;
+        }*/
     },
     watch: {
         /*'serverList': function (newVal, oldVal) {
