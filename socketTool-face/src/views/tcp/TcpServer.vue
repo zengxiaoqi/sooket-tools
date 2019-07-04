@@ -9,8 +9,8 @@
         <el-col :span="4">
             <el-tree :data="serverList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
         </el-col>
-        <el-col :span="10">
-            <!-- 表格体 -->
+        <!--<el-col :span="10">
+            &lt;!&ndash; 表格体 &ndash;&gt;
           <el-table
             :data="tableData.data"
             element-loading-text="Loading"
@@ -40,15 +40,34 @@
               </template>
             </el-table-column>
           </el-table>
-        </el-col>
-        <el-col :span="10">
-            <div v-if="hasRowSelect">
-                接收消息:
-                <el-input id="recv-input" type="textarea" :rows="10" v-model="recvMsg" :readonly="readonly"></el-input>
-              发送消息：
-                <el-input type="textarea" :rows="10" clearable v-model="sendMsg"></el-input>
+        </el-col>-->
+        <el-col :span="20">
+            <!--<el-form ref="serverForm" :model="serverForm" label-width="80px">
+                <el-form-item label="连接">
+                    <el-button v-model="serverForm.state"></el-button>
+                </el-form-item>
+                <el-form-item label="断开">
+                    <el-button v-model="serverForm.state"></el-button>
+                </el-form-item>
+            </el-form>-->
+
+            <div class="top-container">接收消息：
+                <el-input type="textarea" :rows="10" v-model="recvMsg" :readonly="readonly"></el-input>
+            </div>
+            <div class="bottom-container">发送消息：
+                <el-input type="textarea" :rows="10" v-model="sendMsg" ></el-input>
                 <el-checkbox v-model="checkedHex">HEX</el-checkbox>
             </div>
+            <split-pane v-if="hasRowSelect" split="horizontal">
+                <template slot="paneL">
+
+                </template>
+                <template slot="paneR">
+
+                </template>
+            </split-pane>
+
+
         </el-col>
     </el-row>
 
@@ -82,9 +101,11 @@
 <script>
 import { mapGetters } from "vuex";
 import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP } from '@/api/tcp'
+import splitPane from 'vue-splitpane'
 
 export default {
     name: "TcpServer",
+    components: { splitPane },
     filters: {
       statusFilter(status) {
         const statusMap = {
@@ -133,23 +154,16 @@ export default {
                 recvMsg: "",
                 sendMsg: "",
             },
-            tmpServerInfo: {
-                id: "",
-                port: "",
-                statue: "",
-                recvMsg: "",
-                sendMsg: "",
-            },
+
             //弹框form表单校验规则
             editFormRules: {
                 /*id: [{ required: true, message: "该输入项为必填项!" }],*/
                 port: [{ required: true, message: "该输入项为必填项!" }],
             },
             readonly: true,
-            hasRowSelect: false,
+            hasRowSelect: true,
             currentRow: null,
             checkedHex: false,
-            //serverInfo: new Map(), //Map 保存连接信息 Key=id value=tmpServerInfo
             sendMsg: "",
             recvMsg: "",
             clearTimeSet: null,
@@ -234,10 +248,7 @@ export default {
             let _this = this;
             let model = _this.$refs.editFormModel.model;
 
-            //_this.setModel2Object(model);
-            //_this.$store.commit("setServerInfo", _this.tmpServerInfo)
           _this.$store.dispatch('app/setServerInfo', model)
-            //_this.serverInfo.set(model.id, _this.tmpServerInfo);  //保存服务信息
 
             _this.$refs.editFormModel.validate(valid => {
                 if (valid) {
@@ -266,11 +277,7 @@ export default {
             _this.currentRow = row;
             _this.hasRowSelect = true;
         },
-        setModel2Object(model) {
-            let _this = this;
-            _this.tmpServerInfo.id = model.id;
-            _this.tmpServerInfo.port = model.port;
-        },
+
         sendData() {
             let _this = this;
             if(_this.currentRow == null){
@@ -360,5 +367,17 @@ export default {
         height: 400px;
         float: left;
         margin: 10px 5px;
+    }
+
+    .top-container {
+        background-color: #FCE38A;
+        width: 100%;
+        height: 100%;
+    }
+
+    .bottom-container {
+        width: 100%;
+        background-color: #95E1D3;
+        height: 100%;
     }
 </style>
