@@ -51,7 +51,8 @@ public class ServerThread extends Thread {
                 socketMap.get(socket).append(info);
             }
             socket.shutdownInput();//关闭输入流
-
+            System.out.println("客户端断开连接");
+            //删除TcpServerControl.nodeTreeList中对应节点
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
