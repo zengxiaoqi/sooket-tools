@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 import websocket from "../../websocket";
 
 const state = {
-  websocket: new websocket('ws://localhost:9001/websocket/DPS007')
+  websocket: new websocket('ws://localhost:9001/websocket/TCP_SERVER')
 }
 
 const mutations = {

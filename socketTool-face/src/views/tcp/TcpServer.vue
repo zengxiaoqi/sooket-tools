@@ -177,7 +177,7 @@ export default {
     computed: {
         ...mapGetters(['serverInfo']),
         treeData(){
-            return this.$store.state.websocket.serverList;
+            return this.$store.state.websocket;
         }
     },
     watch: {

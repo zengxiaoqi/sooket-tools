@@ -1,8 +1,15 @@
 package com.tools.sockettools.tcp.start;
 
+import com.alibaba.fastjson.JSONArray;
+import com.tools.sockettools.common.util.JsonUtils;
+import com.tools.sockettools.control.TcpServerControl;
+import com.tools.sockettools.entity.NodeTree;
+import com.tools.sockettools.entity.WebsocketData;
 import com.tools.sockettools.tcp.server.ServerThread;
+import com.tools.sockettools.websocket.WebSocket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,6 +21,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -27,12 +35,15 @@ public class Server {
     private int port ;
     public static Map<String,Socket> connectMap = new HashMap<>();
 
+    private WebsocketData websocketData;
+
     public ServerSocket createServer(Map config) throws IOException {
         port = Integer.parseInt((String)config.get("port"));
         id = (String)config.get("id");
 
         //1.创建一个服务器端Socket，即ServerSocket，指定绑定的端口，并监听此端口
         ServerSocket serverSocket=new ServerSocket(port);
+        websocketData = new WebsocketData();
         return serverSocket;
     }
 
@@ -51,8 +62,26 @@ public class Server {
                 log.debug("accpt :"+ socket.toString());
 
                 connectMap.put(id,socket);
-                //创建一个新的线程
 
+                NodeTree nodeTree = new NodeTree();
+                String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
+                nodeTree.setId(childId);
+                nodeTree.setLeaf(true);
+                for(NodeTree pareNode : TcpServerControl.nodeTreeList) {
+                    if(pareNode.getId().equals(id)) {
+                        pareNode.addChildren(nodeTree);
+                        try {
+                            //String rspMsg = JsonUtils.object2Json(TcpServerControl.nodeTreeList);
+                            websocketData.setType("server-list");
+                            websocketData.setMessage(TcpServerControl.nodeTreeList);
+                            String rspMsg = JsonUtils.object2Json(websocketData);
+                            WebSocket.sendOneMessage("TCP_SERVER", rspMsg);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                //创建一个新的线程
                 ServerThread serverThread=new ServerThread(socket);
                 //启动线程
                 serverThread.start();

@@ -34,12 +34,12 @@ public class WebSocket {
     }
 
     @OnMessage
-    public void onMessage(String message) {
+    public  void onMessage(String message) {
         System.out.println("【websocket消息】收到客户端消息:"+message);
     }
 
     // 此为广播消息
-    public void sendAllMessage(String message) {
+    public static void sendAllMessage(String message) {
         for(WebSocket webSocket : webSockets) {
             System.out.println("【websocket消息】广播消息:"+message);
             try {
@@ -51,14 +51,29 @@ public class WebSocket {
     }
 
     // 此为单点消息
-    public void sendOneMessage(String shopId, String message) {
+    public static void sendOneMessage(String shopId, String message) {
         Session session = sessionPool.get(shopId);
         if (session != null) {
             try {
+                System.out.println("【websocket消息】发送消息:"+message);
                 session.getAsyncRemote().sendText(message);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
+
+    public static void sendObject(String shopId, Object obj) {
+        Session session = sessionPool.get(shopId);
+        if (session != null) {
+            try {
+                System.out.println("【websocket消息】发送消息:"+ obj.toString());
+                session.getAsyncRemote().sendObject(obj);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

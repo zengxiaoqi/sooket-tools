@@ -4,6 +4,6 @@ export function formatStr(data) {
   return request({
     url: '/formatStr',
     method: 'post',
-    data
+    data,
   })
 }

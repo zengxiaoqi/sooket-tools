@@ -14,8 +14,9 @@ public class FormatControl {
 
     @RequestMapping(value="/formatStr",method = RequestMethod.POST)
     @ResponseBody
-    public ReturnResult formatStr(@RequestParam("inputStr") String inputStr, @RequestParam("type") String type){
-
+    public ReturnResult formatStr(@RequestBody Map<String,Object> config){
+        String inputStr = (String) config.get("inputStr");
+        String type = (String) config.get("type");
         ReturnResult returnResult = new ReturnResult();
         String rspStr = null;
         if(type.equals("xml")){
@@ -25,7 +26,7 @@ public class FormatControl {
         }
         returnResult.setSuccess(true);
         Map<String, Object> data = new HashMap<>();
-        data.put("outStr", rspStr);
+        data.put("outputStr", rspStr);
         returnResult.setData(data);
 
         return returnResult;

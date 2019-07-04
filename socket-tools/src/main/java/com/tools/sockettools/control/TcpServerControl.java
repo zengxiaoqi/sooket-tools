@@ -31,7 +31,7 @@ public class TcpServerControl {
     //private List<Map<String,Object>> serverList = new ArrayList<>();
     private Map<String, ServerInfo> serverList = new HashMap<String, ServerInfo>();   //根据ID 保存服务端状态
     //private Set<Map<String,Object>> serverList = new HashSet();
-    private static List<NodeTree> nodeTreeList = new ArrayList<>();
+    public static List<NodeTree> nodeTreeList = new ArrayList<NodeTree>();
 
     @RequestMapping(value="/getIP",method = RequestMethod.GET)
     @ResponseBody

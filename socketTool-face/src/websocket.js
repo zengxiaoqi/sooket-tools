@@ -27,7 +27,10 @@ export default class websocket{
         //对接收报文处理
         console.log(e);
         let data = JSON.parse(e.data);
-        this.serverList =data;
+        if(data.type == "server-list") {
+            this.serverList = data.message;  //TCP-SERVER tree列表
+        }
+
     }
 
     onSocketError(e){
