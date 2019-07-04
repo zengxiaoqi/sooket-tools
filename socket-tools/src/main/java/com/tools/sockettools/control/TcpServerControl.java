@@ -1,9 +1,11 @@
 package com.tools.sockettools.control;
 
+import com.tools.sockettools.common.util.DateUtil;
 import com.tools.sockettools.common.util.ObjectMapUtil;
 import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.tcp.client.Client;
+import com.tools.sockettools.tcp.server.ServerThread;
 import com.tools.sockettools.tcp.start.Adapter;
 import com.tools.sockettools.tcp.start.Server;
 import com.tools.sockettools.tcp.start.TcpConnShortServer;
@@ -127,6 +129,8 @@ public class TcpServerControl {
             pw = new PrintWriter(os);
             pw.write((String)config.get("sendData"));
             pw.flush();
+            ServerThread.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
+            ServerThread.socketMap.get(socket).append((String)config.get("sendData"));
         } catch (Exception e) {
             e.printStackTrace();
         }finally{
@@ -160,9 +164,12 @@ public class TcpServerControl {
     @ResponseBody
     public ReturnResult getRcvMsg(@RequestParam("id") String id) {
         ReturnResult returnResult = new ReturnResult();
+        Socket socket = null;
+        socket = Server.connectMap.get(id);
+        StringBuffer stringBuffer = ServerThread.socketMap.get(socket);
 
         returnResult.setSuccess(true);
-        returnResult.setData("测试。。。");
+        returnResult.setData(stringBuffer.toString());
         return returnResult;
     }
 }
