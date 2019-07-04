@@ -4,6 +4,7 @@ import com.tools.sockettools.common.util.DateUtil;
 import com.tools.sockettools.common.util.JsonUtils;
 import com.tools.sockettools.control.TcpServerControl;
 import com.tools.sockettools.entity.NodeTree;
+import com.tools.sockettools.entity.WebsocketData;
 import com.tools.sockettools.websocket.WebSocket;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,6 +64,16 @@ public class ServerThread extends Thread {
                     NodeTree childNode = (NodeTree)child;
                     if(childNode.getId().equals(childId)){
                         pareNode.removeChildren(childNode);
+                        WebsocketData websocketData = new WebsocketData();
+                        websocketData.setType("server-list");
+                        websocketData.setMessage(TcpServerControl.nodeTreeList);
+                        String rspMsg = null;
+                        try {
+                            rspMsg = JsonUtils.object2Json(websocketData);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        WebSocket.sendOneMessage("TCP_SERVER", rspMsg);
                     }
                 }
             }

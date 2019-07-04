@@ -16,12 +16,17 @@ import '@/icons' // icon
 // 生产环境中注释掉以下语句
 //import '../mock/index.js'
 
-
 import store from './store/'
 Vue.config.productionTip = false
 
 Vue.use(ElementUI)
 Vue.use(store)
+
+
+//websocket
+import ws from '@/utils/ws'
+Vue.prototype.$ws = ws
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

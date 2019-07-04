@@ -7,7 +7,7 @@
     <el-button type="primary" @click="sendData" >发送数据</el-button>
     <el-row>
         <el-col :span="4">
-            <el-tree :data="treeData" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
+            <el-tree :data="serverList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
         </el-col>
         <el-col :span="10">
             <!-- 表格体 -->
@@ -97,7 +97,7 @@ export default {
     data() {
         return {
             isOpen: true,
-            treeData: [],
+            //treeData: [],
             defaultProps: {
                 children: 'children',
                 label: 'id',
@@ -167,15 +167,11 @@ export default {
         clearInterval(this.clearTimeSet);
     },
     computed: {
-        ...mapGetters(['serverInfo','websocket']),
-        /*treeData(){
-            return websocket.serverList;
-        }*/
+        ...mapGetters(['serverInfo','serverList']),
+
     },
     watch: {
-        /*'serverList': function (newVal, oldVal) {
-            this.treeData = newVal.nodeTreeList;
-        }*/
+
     },
     methods: {
         getIP() {
@@ -253,7 +249,8 @@ export default {
                             _this.editFormVisible = false;
                             _this.isOpen = false;
                             //this.tableData.data = response.data;
-                            _this.treeData = response.data;
+                            //_this.treeData = response.data;
+                            _this.$store.dispatch('connect/setServerList', response.data);
                         });
                     } else {
 

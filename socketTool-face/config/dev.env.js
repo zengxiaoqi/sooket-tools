@@ -4,5 +4,5 @@ const prodEnv = require('./prod.env')
 
 module.exports = merge(prodEnv, {
   NODE_ENV: '"development"',
-  VUE_APP_WEBSOCKET_URL : 'ws://localhost:9001/websocket/DPS007'
+  VUE_APP_WEBSOCKET_URL : 'localhost:9001/websocket/TCP_SERVER'
 })
