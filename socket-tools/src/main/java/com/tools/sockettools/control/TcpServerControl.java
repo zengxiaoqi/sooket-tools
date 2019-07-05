@@ -116,7 +116,7 @@ public class TcpServerControl {
         PrintWriter pw=null;
         Socket socket = null;
         try {
-            socket = Server.connectMap.get((String)config.get("id"));
+            socket = Server.connectMap.get(config.get("id"));
             os = socket.getOutputStream();
             pw = new PrintWriter(os);
             pw.write((String)config.get("sendData"));

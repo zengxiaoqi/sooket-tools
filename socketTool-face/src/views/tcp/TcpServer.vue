@@ -188,7 +188,7 @@ export default {
         //this.getTableData();
         this.getIP();
         //设置定时任务-定时获取服务端接收的报文
-        this.setTime();
+        //this.setTime();
         //this.treeData = this.$store.state.websocket.serverList;
     },
     beforeDestroy() {    //页面关闭时清除定时器
