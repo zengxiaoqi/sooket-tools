@@ -9,6 +9,7 @@ import com.tools.sockettools.websocket.WebSocket;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,31 +32,25 @@ public class ServerThread extends Thread {
     @Override
     public void run(){
         System.out.println("--------------------");
-        InputStream is=null;
-        InputStreamReader isr=null;
-        BufferedReader br=null;
-        OutputStream os=null;
-        PrintWriter pw=null;
+        BufferedInputStream bis = null;
+        DataInputStream dis = null;
         try {
-            //获取输入流，并读取客户端信息
-            is = socket.getInputStream();
-            isr = new InputStreamReader(is);
-            br = new BufferedReader(isr);
-            /*socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
-            byte[] rcvMsg = readInputStream(is);
-            socketMap.get(socket).append(rcvMsg).append("\n");
-            System.out.println(socketMap.get(socket));*/
-
-            String info=null;
-
-            while((info=br.readLine())!=null){
-                //循环读取客户端的信息
-                //System.out.println("我是服务器，客户端说："+info);
-                socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
-                socketMap.get(socket).append(info).append("\n");
-                System.out.println(socketMap.get(socket));
+            // 装饰流BufferedReader封装输入流（接收客户端的流）
+            bis = new BufferedInputStream(socket.getInputStream());
+            dis = new DataInputStream(bis);
+            byte[] bytes = new byte[1]; // 一次读取一个byte
+            byte[] MAX_BYTES = new byte[1024*1024];
+            int i=0;
+            while (dis.read(bytes) != -1) {
+                MAX_BYTES[i++] = bytes[0];
+                if (dis.available() == 0) {
+                    //接收完一个报文
+                    appendMsg(socket, byteToStr(MAX_BYTES));
+                    i=0;
+                    java.util.Arrays.fill(MAX_BYTES, (byte)0);
+                }
             }
-            socket.shutdownInput();//关闭输入流
+
             System.out.println("客户端断开连接");
             //删除TcpServerControl.nodeTreeList中对应节点
             String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
@@ -81,48 +76,40 @@ public class ServerThread extends Thread {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }finally{
+            System.out.println("-------关闭资源---------");
             //关闭资源
             try {
-                if(pw!=null)
-                    pw.close();
-                if(os!=null)
-                    os.close();
-                if(br!=null)
-                    br.close();
-                if(isr!=null)
-                    isr.close();
-                if(is!=null)
-                    is.close();
-                /*if(socket!=null)
-                    socket.close();*/
+                if(dis!=null) {
+                    dis.close();
+                }
+                if(bis!=null) {
+                    bis.close();
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public static byte[] readInputStream(InputStream ins) {
-
-        BufferedInputStream bis = new BufferedInputStream(ins);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    public String byteToStr(byte[] buffer) {
         try {
-            byte[] buffer = new byte[128];
-            int n = -1;
-            while ((n = bis.read(buffer)) != -1) {
-                bos.write(buffer, 0, n);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            if (bis != null) {
-                try {
-                    bis.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+            int length = 0;
+            for (int i = 0; i < buffer.length; ++i) {
+                if (buffer[i] == 0) {
+                    length = i;
+                    break;
                 }
             }
+            return new String(buffer, 0, length, "UTF-8");
+        } catch (Exception e) {
+            return "";
         }
-        return bos.toByteArray();
+    }
+
+    public static void appendMsg(Socket socket, String msg){
+        socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
+        socketMap.get(socket).append(msg).append("\n");
+        System.out.println(socketMap.get(socket));
     }
 }

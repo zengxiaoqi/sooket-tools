@@ -35,6 +35,10 @@ public class TalkServer4Byte {
                     ret += bytesToHexString(bytes) + " ";
                     if (dis.available() == 0) { //一个请求
                         doSomething(ret);
+                        DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                        dos.write("收到...".getBytes()); // 发送给客户端
+                        dos.flush();
+                        dos.close();
                     }
                 }
 

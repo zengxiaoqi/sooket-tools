@@ -9,6 +9,7 @@ import com.tools.sockettools.tcp.start.Server;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -112,28 +113,26 @@ public class TcpServerControl {
     @RequestMapping(value="/sendRespons",method = RequestMethod.POST)
     @ResponseBody
     public byte[] sendRespons(@RequestBody Map<String,Object> config) {
-        OutputStream os=null;
-        PrintWriter pw=null;
+        DataOutputStream dos=null;
         Socket socket = null;
         try {
             socket = Server.connectMap.get(config.get("id"));
-            os = socket.getOutputStream();
-            pw = new PrintWriter(os);
-            pw.write((String)config.get("sendData"));
-            pw.flush();
+            dos = new DataOutputStream(socket.getOutputStream());
+            String rspMsg = (String)config.get("sendMsg");
+            dos.write(rspMsg.getBytes());
+            dos.flush();
+            //dos.close();
             ServerThread.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
-            ServerThread.socketMap.get(socket).append((String)config.get("sendData")).append("\n");
+            ServerThread.socketMap.get(socket).append(rspMsg).append("\n");
         } catch (Exception e) {
             e.printStackTrace();
         }finally{
             //关闭资源
             try {
-                if(pw!=null)
-                    pw.close();
-                if(os!=null)
-                    os.close();
-                /*if(socket!=null)
-                    socket.close();*/
+                if(dos!=null) {
+                    dos.close();
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
