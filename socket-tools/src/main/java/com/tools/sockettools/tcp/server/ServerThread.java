@@ -8,12 +8,7 @@ import com.tools.sockettools.entity.WebsocketData;
 import com.tools.sockettools.websocket.WebSocket;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,14 +41,19 @@ public class ServerThread extends Thread {
             is = socket.getInputStream();
             isr = new InputStreamReader(is);
             br = new BufferedReader(isr);
-            socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
+            /*socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
+            byte[] rcvMsg = readInputStream(is);
+            socketMap.get(socket).append(rcvMsg).append("\n");
+            System.out.println(socketMap.get(socket));*/
+
             String info=null;
 
             while((info=br.readLine())!=null){
                 //循环读取客户端的信息
                 //System.out.println("我是服务器，客户端说："+info);
+                socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
+                socketMap.get(socket).append(info).append("\n");
                 System.out.println(socketMap.get(socket));
-                socketMap.get(socket).append(info);
             }
             socket.shutdownInput();//关闭输入流
             System.out.println("客户端断开连接");
@@ -99,5 +99,30 @@ public class ServerThread extends Thread {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static byte[] readInputStream(InputStream ins) {
+
+        BufferedInputStream bis = new BufferedInputStream(ins);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try {
+            byte[] buffer = new byte[128];
+            int n = -1;
+            while ((n = bis.read(buffer)) != -1) {
+                bos.write(buffer, 0, n);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (bis != null) {
+                try {
+                    bis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return bos.toByteArray();
     }
 }

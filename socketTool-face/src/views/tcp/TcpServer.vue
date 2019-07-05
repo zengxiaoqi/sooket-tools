@@ -9,8 +9,8 @@
         <el-col :span="4">
             <el-tree :data="serverList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
         </el-col>
-        <!--<el-col :span="10">
-            &lt;!&ndash; 表格体 &ndash;&gt;
+        <el-col :span="20">
+            <!-- 表格体 -->
           <el-table
             :data="tableData.data"
             element-loading-text="Loading"
@@ -19,37 +19,50 @@
             highlight-current-row
             @current-change="rowClick"
           >
-            <el-table-column align="center" label="序号" >
+            <el-table-column sortable label="本地IP">
               <template slot-scope="scope">
-                {{ scope.$index }}
+                {{ scope.row.ip }}
               </template>
             </el-table-column>
-            <el-table-column label="ID">
-              <template slot-scope="scope">
-                {{ scope.row.id }}
-              </template>
-            </el-table-column>
-            <el-table-column label="PORT" sortable align="center">
+            <el-table-column label="本地端口" sortable align="center">
               <template slot-scope="scope">
                 <span>{{ scope.row.port }}</span>
               </template>
             </el-table-column>
-            <el-table-column class-name="status-col" label="Status"  align="center">
+              <el-table-column label="对方IP" sortable align="center">
+                  <template slot-scope="scope">
+                      <span>{{ scope.row.remoteIp }}</span>
+                  </template>
+              </el-table-column>
+              <el-table-column label="对方端口" sortable align="center">
+                  <template slot-scope="scope">
+                      <span>{{ scope.row.remotePort }}</span>
+                  </template>
+              </el-table-column>
+            <el-table-column class-name="status-col" sortable label="连接状态"  align="center">
               <template slot-scope="scope">
                 <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
-        </el-col>-->
-        <el-col :span="20">
-            <!--<el-form ref="serverForm" :model="serverForm" label-width="80px">
+
+            <div class="top-container">接收消息：
+                <el-input type="textarea" :rows="10" v-model="recvMsg" :readonly="readonly"></el-input>
+            </div>
+            <div class="bottom-container">发送消息：
+                <el-input type="textarea" :rows="10" v-model="sendMsg" ></el-input>
+                <el-checkbox v-model="checkedHex">HEX</el-checkbox>
+            </div>
+        </el-col>
+        <!--<el-col :span="20">
+            &lt;!&ndash;<el-form ref="serverForm" :model="serverForm" label-width="80px">
                 <el-form-item label="连接">
                     <el-button v-model="serverForm.state"></el-button>
                 </el-form-item>
                 <el-form-item label="断开">
                     <el-button v-model="serverForm.state"></el-button>
                 </el-form-item>
-            </el-form>-->
+            </el-form>&ndash;&gt;
 
             <div class="top-container">接收消息：
                 <el-input type="textarea" :rows="10" v-model="recvMsg" :readonly="readonly"></el-input>
@@ -68,7 +81,7 @@
             </split-pane>
 
 
-        </el-col>
+        </el-col>-->
     </el-row>
 
     <!--编辑弹框-->
@@ -100,7 +113,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP } from '@/api/tcp'
+import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP,getSocketInfo } from '@/api/tcp'
 import splitPane from 'vue-splitpane'
 
 export default {
@@ -120,6 +133,7 @@ export default {
             isOpen: true,
             //treeData: [],
             defaultProps: {
+                parentId: 'parentId',
                 children: 'children',
                 label: 'id',
                 isLeaf: 'leaf'
@@ -195,27 +209,41 @@ export default {
             })
         },
         handleNodeClick(data) {
+            let _this =this;
             console.log(data);
             if(data.leaf) {
                 console.log("点击叶子节点，显示数据");
-                //this.getTableData(data.id);
+                _this.currentRow = data;
+                let params = {
+                    parentId: data.parentId,
+                    id: data.id,
+                };
+                _this.getTableData(params);
             }else {
+
                 let param = {id: data.id};
                 getServerInfo(param).then(response => {
                     console.log(response.data);
-                    this.isOpen = response.data.status;
+                    if(response.data.status == "open") {
+                        _this.isOpen = true;
+                    }else {
+                        _this.isOpen = false;
+                    }
+
                 })
             }
         },
         // 获取table数据
-        getTableData(id) {
-            let param = {id: id};
-          getServerInfo(param).then(response => {
-            this.loading = false
-            this.tableData.data = response.data
-            response.data.forEach((value)=> {
+        getTableData(params) {
+            let _this = this;
+            //let param = {id: id};
+            getSocketInfo(params).then(response => {
+                _this.loading = false
+                _this.tableData.data = response.data;
+                _this.recvMsg = response.data[0].message;
+            /*response.data.forEach((value)=> {
               this.$store.dispatch('app/setServerInfo', value)
-            })
+            })*/
           })
         },
 
@@ -248,7 +276,7 @@ export default {
             let _this = this;
             let model = _this.$refs.editFormModel.model;
 
-          _this.$store.dispatch('app/setServerInfo', model)
+          //_this.$store.dispatch('app/setServerInfo', model)
 
             _this.$refs.editFormModel.validate(valid => {
                 if (valid) {
@@ -274,8 +302,8 @@ export default {
             let _this = this;
             //根据选中行的ID找到发送消息框和接收消息框的对应关系
             //console.log("---------"+row.id);
-            _this.currentRow = row;
-            _this.hasRowSelect = true;
+            //_this.currentRow = row;
+            //_this.hasRowSelect = true;
         },
 
         sendData() {
@@ -287,10 +315,12 @@ export default {
                 });
                 return;
             }
-            var Id = _this.currentRow["id"];
-            var tmpDate = _this.serverInfo.get(Id);
-            tmpDate.sendMsg = _this.sendMsg;
-            sendData(tmpDate).then(response => {
+
+            let data = {
+                id: _this.currentRow["id"],
+                sendMsg : _this.sendMsg,
+            }
+            sendData(data).then(response => {
               _this.$message.success("发送数据成功")
             });
         },
@@ -306,7 +336,10 @@ export default {
             //根据当前选择行去后台请求数据
             if(_this.currentRow != null) {
                 //_this.param.id = _this.currentRow["id"];
-                let param = {"id": _this.currentRow["id"]}
+                let param = {
+                    parentId: _this.currentRow["parentId"],
+                    id: _this.currentRow["id"]
+                }
                 getRcvMsg(param).then(response => {
                         //_this.$message.success("接收数据成功");
                         console.log("接收数据: "+response.data);

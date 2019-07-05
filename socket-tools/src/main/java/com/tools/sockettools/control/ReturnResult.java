@@ -1,11 +1,14 @@
 package com.tools.sockettools.control;
 
 
+import org.codehaus.jackson.map.ObjectMapper;
+
 import java.util.List;
 import java.util.Map;
 
 
 public class ReturnResult {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private Long total;
     

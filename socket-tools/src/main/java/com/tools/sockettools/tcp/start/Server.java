@@ -61,10 +61,12 @@ public class Server {
 
                 log.debug("accpt :"+ socket.toString());
 
-                connectMap.put(id,socket);
+                String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
+                connectMap.put(childId,socket);
 
                 NodeTree nodeTree = new NodeTree();
-                String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
+
+                nodeTree.setParentId(id);
                 nodeTree.setId(childId);
                 nodeTree.setLeaf(true);
                 for(NodeTree pareNode : TcpServerControl.nodeTreeList) {

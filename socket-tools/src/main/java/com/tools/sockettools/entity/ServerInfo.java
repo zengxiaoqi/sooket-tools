@@ -4,6 +4,7 @@ import lombok.Data;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 
 @Data
@@ -14,5 +15,7 @@ public class ServerInfo {
     String id;  //id
     String status;  //监听状态
     ServerSocket serverSocket;  //监听socket
-    List<NodeTree> nodeTreeList;    //连接点
+    Socket socket;  //连接socket
+    String message; //接收到的消息
+    //List<NodeTree> nodeTreeList;    //连接点
 }

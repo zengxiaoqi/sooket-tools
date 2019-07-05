@@ -18,7 +18,7 @@ export function createServer(data) {
 
 export function sendData(data) {
   return request({
-    url: '/sendData',
+    url: '/sendRespons',
     method: 'post',
     data
   })
@@ -54,5 +54,13 @@ export function getIP() {
         url: '/getIP',
         method: 'get',
         params:{}
+    })
+}
+
+export function getSocketInfo(params) {
+    return request({
+        url: '/getSocketInfo',
+        method: 'get',
+        params:params
     })
 }

@@ -122,7 +122,7 @@ public class TcpServerControl {
             pw.write((String)config.get("sendData"));
             pw.flush();
             ServerThread.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
-            ServerThread.socketMap.get(socket).append((String)config.get("sendData"));
+            ServerThread.socketMap.get(socket).append((String)config.get("sendData")).append("\n");
         } catch (Exception e) {
             e.printStackTrace();
         }finally{
@@ -162,6 +162,32 @@ public class TcpServerControl {
 
         returnResult.setSuccess(true);
         returnResult.setData(stringBuffer.toString());
+        return returnResult;
+    }
+
+    @RequestMapping(value="/getSocketInfo",method = RequestMethod.GET)
+    @ResponseBody
+    public ReturnResult getSocketInfo(@RequestParam("parentId") String parentId,@RequestParam("id") String id) {
+        ReturnResult returnResult = new ReturnResult();
+        Map<String, Object> rspMap = new HashMap<>();
+        ServerInfo serverInfo = serverList.get(parentId);
+
+        Socket socket = null;
+        socket = Server.connectMap.get(id);
+        StringBuffer stringBuffer = ServerThread.socketMap.get(socket);
+
+        rspMap.put("ip", socket.getLocalAddress().toString());
+        rspMap.put("port", socket.getLocalPort());
+        rspMap.put("remoteIp",socket.getRemoteSocketAddress().toString());
+        rspMap.put("remotePort",socket.getPort());
+        rspMap.put("message",stringBuffer.toString());
+        rspMap.put("status",serverInfo.getStatus());
+
+        List list = new ArrayList();
+        list.add(rspMap);
+
+        returnResult.setSuccess(true);
+        returnResult.setData(list);
         return returnResult;
     }
 }

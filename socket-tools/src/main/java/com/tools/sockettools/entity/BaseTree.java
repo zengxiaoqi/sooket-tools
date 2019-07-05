@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class BaseTree {
+    private String parentId;
     private List children;
     private Boolean leaf;
 
