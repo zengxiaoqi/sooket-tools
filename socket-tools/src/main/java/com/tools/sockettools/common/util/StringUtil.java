@@ -1,9 +1,6 @@
 package com.tools.sockettools.common.util;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.*;
@@ -171,6 +168,25 @@ public class StringUtil {
 			i++;
 		}
 		return data;
+	}
+
+	/**
+	 * 十六进制转换字符串
+	 *
+	 * @param String str Byte字符串(Byte之间无分隔符 如:[616C6B])
+	 * @return String 对应的字符串
+	 */
+	public static String hexStr2Str(String hexStr) throws UnsupportedEncodingException {
+		char[] hexs = hexStr.toUpperCase().toCharArray();
+		byte[] bytes = new byte[hexStr.length() / 2];
+		int n;
+
+		for (int i = 0; i < bytes.length; i++) {
+			n = hexString.indexOf(hexs[2 * i]) * 16;
+			n += hexString.indexOf(hexs[2 * i + 1]);
+			bytes[i] = (byte) (n & 0xff);
+		}
+		return new String(bytes,"gbk");
 	}
 
 	private static byte uniteBytes(String src0, String src1) {

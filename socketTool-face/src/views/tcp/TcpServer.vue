@@ -50,38 +50,10 @@
                 <el-input type="textarea" :rows="10" v-model="recvMsg" :readonly="readonly"></el-input>
             </div>
             <div class="bottom-container">发送消息：
-                <el-input type="textarea" :rows="10" v-model="sendMsg" ></el-input>
                 <el-checkbox v-model="checkedHex">HEX</el-checkbox>
+                <el-input type="textarea" :rows="10" v-model="sendMsg" ></el-input>
             </div>
         </el-col>
-        <!--<el-col :span="20">
-            &lt;!&ndash;<el-form ref="serverForm" :model="serverForm" label-width="80px">
-                <el-form-item label="连接">
-                    <el-button v-model="serverForm.state"></el-button>
-                </el-form-item>
-                <el-form-item label="断开">
-                    <el-button v-model="serverForm.state"></el-button>
-                </el-form-item>
-            </el-form>&ndash;&gt;
-
-            <div class="top-container">接收消息：
-                <el-input type="textarea" :rows="10" v-model="recvMsg" :readonly="readonly"></el-input>
-            </div>
-            <div class="bottom-container">发送消息：
-                <el-input type="textarea" :rows="10" v-model="sendMsg" ></el-input>
-                <el-checkbox v-model="checkedHex">HEX</el-checkbox>
-            </div>
-            <split-pane v-if="hasRowSelect" split="horizontal">
-                <template slot="paneL">
-
-                </template>
-                <template slot="paneR">
-
-                </template>
-            </split-pane>
-
-
-        </el-col>-->
     </el-row>
 
     <!--编辑弹框-->
@@ -348,6 +320,7 @@ export default {
                 id: _this.childNode["id"],
                 parentId: _this.childNode["parentId"],
                 sendMsg : _this.sendMsg,
+                hexStr: _this.checkedHex,
             }
             sendData(data).then(response => {
               _this.$message.success("发送数据成功")

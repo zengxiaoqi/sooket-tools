@@ -1,5 +1,6 @@
 package com.tools.sockettools.control;
 
+import com.tools.sockettools.common.util.StringUtil;
 import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.tcp.server.RecvThread;
@@ -121,9 +122,10 @@ public class TcpServerControl {
         ReturnResult returnResult = new ReturnResult();
         try {
             Socket socket = StaticStore.connectMap.get(config.get("id"));
-            String rspMsg = (String)config.get("sendMsg");
+            String rspMsg = (String) config.get("sendMsg");
+
             ServerInfo serverInfo = StaticStore.serverList.get(config.get("parentId"));
-            SendThread sendThread = new SendThread(socket,rspMsg,serverInfo.getEncode());
+            SendThread sendThread = new SendThread(socket,rspMsg,serverInfo.getEncode(),(Boolean) config.get("hexStr"));
             new Thread(sendThread).start();
             returnResult.setSuccess(true);
         } catch (Exception e) {
