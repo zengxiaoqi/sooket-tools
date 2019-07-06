@@ -56,8 +56,10 @@ public class WebSocket {
         if (session != null) {
             try {
                 System.out.println("【websocket消息】发送消息:"+message);
-                session.getAsyncRemote().sendText(message);
-
+                synchronized(session) {
+                    //session.getAsyncRemote().sendText(message);
+                    session.getBasicRemote().sendText(message);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

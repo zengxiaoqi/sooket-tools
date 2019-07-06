@@ -113,7 +113,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP,getSocketInfo } from '@/api/tcp'
+import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP,getSocketInfo,startServer,getNodeTree } from '@/api/tcp'
 import splitPane from 'vue-splitpane'
 
 export default {
@@ -191,6 +191,7 @@ export default {
         //设置定时任务-定时获取服务端接收的报文
         //this.setTime();
         //this.treeData = this.$store.state.websocket.serverList;
+        this.getNodeTree();
     },
     beforeDestroy() {    //页面关闭时清除定时器
         clearInterval(this.clearTimeSet);
@@ -209,6 +210,13 @@ export default {
                 this.editFormModel.ip = response.data;
             })
         },
+        getNodeTree(){
+            let _this = this;
+            getNodeTree().then(response => {
+                console.log(response.data);
+                _this.$store.dispatch("connect/setServerList", response.data)
+            })
+        },
         handleNodeClick(data) {
             let _this =this;
             console.log(data);
@@ -225,11 +233,7 @@ export default {
                 let param = {id: data.id};
                 getServerInfo(param).then(response => {
                     console.log(response.data);
-                    if(response.data.status == "open") {
-                        _this.isOpen = true;
-                    }else {
-                        _this.isOpen = false;
-                    }
+                    _this.isOpen = response.data.status;
 
                 })
             }
@@ -287,7 +291,7 @@ export default {
                         createServer(model).then(response => {
                           _this.$message.success("创建服务端成功");
                             _this.editFormVisible = false;
-                            _this.isOpen = false;
+                            _this.isOpen = true;
                             //this.tableData.data = response.data;
                             //_this.treeData = response.data;
                             _this.$store.dispatch('connect/setServerList', response.data);
@@ -353,7 +357,7 @@ export default {
         startServer(){
             let _this = this;
             if(_this.serverNode != null) {
-                createServer(_this.serverNode).then(response => {
+                startServer(_this.serverNode).then(response => {
                         _this.$message.success("启动监听成功");
                         //console.log("接收数据: "+response.data);
                         _this.tableData.data = response.data;
@@ -374,7 +378,7 @@ export default {
                 closeServer(_this.param).then(response => {
                         _this.$message.success("服务关闭成功");
                         //console.log("接收数据: "+response.data);
-                        _this.tableData.data = response.data;
+                        //_this.$store.dispatch('connect/setServerList', response.data);
                         _this.isOpen = false;
                     }
                 ).catch(

@@ -20,8 +20,8 @@ public class SendThread implements Runnable{
         try {
             OutputStream outputStream = socket.getOutputStream();
             outputStream.write(sendMsg.getBytes());
-            RecvThread.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
-            RecvThread.socketMap.get(socket).append(sendMsg).append("\n");
+            StaticStore.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
+            StaticStore.socketMap.get(socket).append(sendMsg).append("\n");
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

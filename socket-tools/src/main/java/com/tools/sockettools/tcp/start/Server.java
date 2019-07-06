@@ -1,102 +1,128 @@
 package com.tools.sockettools.tcp.start;
 
-import com.tools.sockettools.common.util.JsonUtils;
-import com.tools.sockettools.control.TcpServerControl;
 import com.tools.sockettools.entity.NodeTree;
-import com.tools.sockettools.entity.WebsocketData;
 import com.tools.sockettools.tcp.server.RecvThread;
-import com.tools.sockettools.websocket.WebSocket;
+import com.tools.sockettools.tcp.server.StaticStore;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
+import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-/*
- * 基于TCP协议的Socket通信，实现用户登陆
+/**
+ * 基于TCP协议的Socket通信
  * 服务器端
  */
 @Data
 @Slf4j
-public class Server {
+public class Server implements Runnable{
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private String id;
     private int port ;
-    public static Map<String,Socket> connectMap = new HashMap<>();
+    private ServerSocket serverSocket;
+    private ExecutorService pool;
 
-    private WebsocketData websocketData;
+    public Server(){}
 
-    public ServerSocket createServer(Map config) throws IOException {
+    public Server(Map config) throws IOException {
         port = Integer.parseInt((String)config.get("port"));
         id = (String)config.get("id");
 
+        pool = Executors.newFixedThreadPool(StaticStore.MAX_ACCPT_POOL_SIZE);
+
         //1.创建一个服务器端Socket，即ServerSocket，指定绑定的端口，并监听此端口
-        ServerSocket serverSocket=new ServerSocket(port);
-        websocketData = new WebsocketData();
-        return serverSocket;
+        serverSocket=new ServerSocket(port);
+
+        System.out.println("***创建监听成功，端口:"+ port);
+       /**
+         * 保存 pool信息，供后续关闭使用
+         */
+        StaticStore.accptPoolMap.put(id, pool);
+
+        StaticStore.serverMap.put(id, true);
     }
 
 
-    public void start(ServerSocket serverSocket) {
+    @Override
+    public void run() {
         try {
             Socket socket=null;
             //记录客户端的数量
             int count=0;
             System.out.println("***服务器即将启动，等待客户端的连接***");
             //循环监听等待客户端的连接
-            while(true){
-                //调用accept()方法开始监听，等待客户端的连接
-                socket=serverSocket.accept();
+            while(StaticStore.serverMap.get(id)){
+                //serverSocket.setSoTimeout(3000);
+                socket = serverSocket.accept();
 
-                log.debug("accpt :"+ socket.toString());
+                pool.execute(new RecvThread(socket));
 
                 String childId = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
-                connectMap.put(childId,socket);
+                StaticStore.connectMap.put(childId, socket);
 
                 NodeTree nodeTree = new NodeTree();
-
                 nodeTree.setParentId(id);
                 nodeTree.setId(childId);
                 nodeTree.setLeaf(true);
-                for(NodeTree pareNode : TcpServerControl.nodeTreeList) {
-                    if(pareNode.getId().equals(id)) {
-                        pareNode.addChildren(nodeTree);
-                        try {
-                            //String rspMsg = JsonUtils.object2Json(TcpServerControl.nodeTreeList);
-                            websocketData.setType("server-list");
-                            websocketData.setMessage(TcpServerControl.nodeTreeList);
-                            String rspMsg = JsonUtils.object2Json(websocketData);
-                            WebSocket.sendOneMessage("TCP_SERVER", rspMsg);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                //创建一个新的线程
-                RecvThread recvThread =new RecvThread(socket);
-                //启动线程
-                recvThread.start();
+                StaticStore.addChildNodeTree(id, nodeTree);
 
                 count++;//统计客户端的数量
                 System.out.println("客户端的数量："+count);
-                InetAddress address=socket.getInetAddress();
-                System.out.println("当前客户端的IP："+address.getHostAddress());
             }
+            System.out.println("---------监听结束，清理线程---------");
+            StaticStore.deleteChildByParentId(id);
+            StaticStore.socketMap.remove(socket);
+
+            //shutdownAndAwaitTermination(pool);
+            socket.close();
+            serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
     }
 
-    public boolean stopServer(ServerSocket serverSocket){
-        try {
-            serverSocket.close();
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void stop(String id, ServerSocket serverSocket){
+        if (serverSocket != null){
+            //shutdownAndAwaitTermination(pool);
+            try {
+
+                //serverSocket.close();
+                Socket socket = new Socket("127.0.0.1",serverSocket.getLocalPort());
+                StaticStore.serverMap.put(id,false);
+                socket.close();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        return false;
+    }
+
+    public void shutdownAndAwaitTermination(ExecutorService pool) {
+        pool.shutdown(); // Disable new tasks from being submitted
+        try {
+            // Wait a while for existing tasks to terminate
+            if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+                pool.shutdownNow(); // Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+                    System.err.println("Pool did not terminate");
+                }
+            }
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
+            pool.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+        System.out.println("-----------线程池清理结束--------");
     }
 }

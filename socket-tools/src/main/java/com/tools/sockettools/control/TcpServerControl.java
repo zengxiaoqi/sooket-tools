@@ -1,31 +1,29 @@
 package com.tools.sockettools.control;
 
-import com.tools.sockettools.common.util.DateUtil;
 import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.tcp.server.RecvThread;
 import com.tools.sockettools.tcp.server.SendThread;
+import com.tools.sockettools.tcp.server.StaticStore;
 import com.tools.sockettools.tcp.start.Server;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.DataOutputStream;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.Selector;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Administrator
  */
 @RestController
 public class TcpServerControl {
-    private Map<String, ServerSocket> adapterMap = new HashMap<>();
-    private Map<String, Selector> selectionMap = new HashMap<>();
-    private Map<String, ServerInfo> serverList = new HashMap<String, ServerInfo>();   //根据ID 保存服务端状态
-    public static List<NodeTree> nodeTreeList = new ArrayList<NodeTree>();
 
     @RequestMapping(value="/getIP",method = RequestMethod.GET)
     @ResponseBody
@@ -41,39 +39,28 @@ public class TcpServerControl {
         String id = String.format("%s:%s",config.get("ip"), config.get("port"));
         config.put("id", id);
         try {
-            Server server = new Server();
-            ServerSocket finalServerSocket = server.createServer(config);
-            Thread thread = new Thread(){
-                @Override
-                public void run(){
-                    server.start(finalServerSocket);
-                }
-            };
-            thread.start();
+            Server server = new Server(config);
+            ExecutorService pool = Executors.newFixedThreadPool(1);
+            pool.execute(server);
+            StaticStore.serverPoolMap.put(id, pool);
             returnResult.setSuccess(true);
 
             ServerInfo serverInfo = new ServerInfo();
             //保存监听返回的 ServerSocket ，供后续关闭使用
             serverInfo.setId(id);
-            serverInfo.setServerSocket(finalServerSocket);
+            serverInfo.setPort((String)config.get("port"));
+            serverInfo.setServerSocket(server.getServerSocket());
             serverInfo.setStatus("open");
 
             NodeTree nodeTree = new NodeTree();
             nodeTree.setId(id);
             nodeTree.setLeaf(false);
 
+            //新建服务
+            StaticStore.serverList.put(id, serverInfo);
+            StaticStore.nodeTreeList.add(nodeTree);
 
-            if(serverList.get(id) == null) {
-                //新建服务
-                serverList.put(id, serverInfo);
-                nodeTreeList.add(nodeTree);
-            }else {
-                //重启监听
-                serverList.get(id).setStatus("open");
-            }
-
-            //returnResult.setData(serverList);
-            returnResult.setData(nodeTreeList);
+            returnResult.setData(StaticStore.nodeTreeList);
         } catch (Exception e) {
             e.printStackTrace();
             returnResult.setSuccess(false);
@@ -83,18 +70,46 @@ public class TcpServerControl {
         return returnResult;
     }
 
+    @RequestMapping(value="/startServer",method = RequestMethod.POST)
+    @ResponseBody
+    public ReturnResult startServer(@RequestBody Map<String,Object> config) {
+        ReturnResult returnResult = new ReturnResult();
+        String id = (String)config.get("id");
+        ServerInfo serverInfo = StaticStore.serverList.get(id);
+        config.put("port", serverInfo.getPort());
+        Server server = null;
+        try {
+            server = new Server(config);
+            //new Thread(server).start();
+            StaticStore.serverPoolMap.get(id).execute(server);
+            //重启监听
+            serverInfo.setServerSocket(server.getServerSocket());
+            StaticStore.serverList.get(id).setStatus("open");
+            returnResult.setSuccess(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        returnResult.setData(StaticStore.nodeTreeList);
+
+        return returnResult;
+    }
+
     @RequestMapping(value="/stopServer",method = RequestMethod.GET)
     @ResponseBody
     public ReturnResult stopServer(@RequestParam("id") String id) {
         ReturnResult returnResult = new ReturnResult();
 
-        ServerSocket socket = serverList.get(id).getServerSocket();
         Server server = new Server();
-        server.stopServer(socket);
-        returnResult.setSuccess(true);
-        serverList.get(id).setStatus("close");
+        server.stop(id,StaticStore.serverList.get(id).getServerSocket());
+        server.shutdownAndAwaitTermination(StaticStore.serverPoolMap.get(id));
 
-        returnResult.setData(serverList);
+        returnResult.setSuccess(true);
+
+        StaticStore.serverList.get(id).setStatus("close");
+        /* 清空nodeList内容？ */
+        //StaticStore.deleteChildByParentId(id);
+        //returnResult.setData(StaticStore.nodeTreeList);
 
         return returnResult;
     }
@@ -104,7 +119,7 @@ public class TcpServerControl {
     public ReturnResult sendRespons(@RequestBody Map<String,Object> config) {
         ReturnResult returnResult = new ReturnResult();
         try {
-            Socket socket = Server.connectMap.get(config.get("id"));
+            Socket socket = StaticStore.connectMap.get(config.get("id"));
             String rspMsg = (String)config.get("sendMsg");
             SendThread sendThread = new SendThread(socket,rspMsg);
             new Thread(sendThread).start();
@@ -122,7 +137,10 @@ public class TcpServerControl {
         ReturnResult returnResult = new ReturnResult();
 
         returnResult.setSuccess(true);
-        returnResult.setData(serverList.get(id));
+        ServerInfo serverInfo = StaticStore.serverList.get(id);
+        Map<String, Boolean> rspMap = new HashedMap();
+        rspMap.put("status", serverSocketStatus(serverInfo.getServerSocket()));
+        returnResult.setData(rspMap);
         return returnResult;
     }
 
@@ -131,11 +149,20 @@ public class TcpServerControl {
     public ReturnResult getRcvMsg(@RequestParam("id") String id) {
         ReturnResult returnResult = new ReturnResult();
         Socket socket = null;
-        socket = Server.connectMap.get(id);
-        StringBuffer stringBuffer = RecvThread.socketMap.get(socket);
+        socket = StaticStore.connectMap.get(id);
+        StringBuffer stringBuffer = StaticStore.socketMap.get(socket);
 
         returnResult.setSuccess(true);
         returnResult.setData(stringBuffer.toString());
+        return returnResult;
+    }
+
+    @RequestMapping(value="/getNodeTree",method = RequestMethod.GET)
+    @ResponseBody
+    public ReturnResult getNodeTree() {
+        ReturnResult returnResult = new ReturnResult();
+        returnResult.setSuccess(true);
+        returnResult.setData(StaticStore.nodeTreeList);
         return returnResult;
     }
 
@@ -144,11 +171,11 @@ public class TcpServerControl {
     public ReturnResult getSocketInfo(@RequestParam("parentId") String parentId,@RequestParam("id") String id) {
         ReturnResult returnResult = new ReturnResult();
         Map<String, Object> rspMap = new HashMap<>();
-        ServerInfo serverInfo = serverList.get(parentId);
+        ServerInfo serverInfo = StaticStore.serverList.get(parentId);
 
         Socket socket = null;
-        socket = Server.connectMap.get(id);
-        StringBuffer stringBuffer = RecvThread.socketMap.get(socket);
+        socket = StaticStore.connectMap.get(id);
+        StringBuffer stringBuffer = StaticStore.socketMap.get(socket);
 
         rspMap.put("ip", socket.getLocalAddress().toString());
         rspMap.put("port", socket.getLocalPort());
@@ -163,5 +190,9 @@ public class TcpServerControl {
         returnResult.setSuccess(true);
         returnResult.setData(list);
         return returnResult;
+    }
+
+    public Boolean serverSocketStatus(ServerSocket serverSocket){
+        return !serverSocket.isClosed();
     }
 }

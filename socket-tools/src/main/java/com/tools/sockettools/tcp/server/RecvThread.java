@@ -19,13 +19,13 @@ import java.util.Map;
  */
 @Slf4j
 public class RecvThread extends Thread {
-    public static Map<Socket,StringBuffer> socketMap = new HashMap<>();
+
     // 和本线程相关的Socket
     Socket socket = null;
 
     public RecvThread(Socket socket) {
         this.socket = socket;
-        socketMap.put(socket,new StringBuffer());
+        StaticStore.socketMap.put(socket,new StringBuffer());
     }
 
     //线程执行的操作，响应客户端的请求
@@ -51,27 +51,11 @@ public class RecvThread extends Thread {
                 }
             }
 
-            System.out.println("客户端断开连接");
+            System.out.println("-------客户端断开连接-------");
             //删除TcpServerControl.nodeTreeList中对应节点
             String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
-            for(NodeTree pareNode : TcpServerControl.nodeTreeList) {
-                for(Object child : pareNode.getChildren()) {
-                    NodeTree childNode = (NodeTree)child;
-                    if(childNode.getId().equals(childId)){
-                        pareNode.removeChildren(childNode);
-                        WebsocketData websocketData = new WebsocketData();
-                        websocketData.setType("server-list");
-                        websocketData.setMessage(TcpServerControl.nodeTreeList);
-                        String rspMsg = null;
-                        try {
-                            rspMsg = JsonUtils.object2Json(websocketData);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        WebSocket.sendOneMessage("TCP_SERVER", rspMsg);
-                    }
-                }
-            }
+            StaticStore.deleteChildById(childId);
+
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -111,8 +95,8 @@ public class RecvThread extends Thread {
     }
 
     public static void appendMsg(Socket socket, String msg){
-        socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
-        socketMap.get(socket).append(msg).append("\n");
-        System.out.println(socketMap.get(socket));
+        StaticStore.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
+        StaticStore.socketMap.get(socket).append(msg).append("\n");
+        System.out.println(StaticStore.socketMap.get(socket));
     }
 }

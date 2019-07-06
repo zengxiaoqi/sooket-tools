@@ -1,5 +1,6 @@
 package com.tools.sockettools.entity;
 
+import com.tools.sockettools.tcp.start.Server;
 import lombok.Data;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -13,6 +14,7 @@ public class ServerInfo {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     String id;  //id
+    String port; //端口
     String status;  //监听状态
     ServerSocket serverSocket;  //监听socket
     Socket socket;  //连接socket

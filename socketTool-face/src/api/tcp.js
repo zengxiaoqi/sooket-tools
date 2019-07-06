@@ -35,7 +35,7 @@ export function getRcvMsg(params) {
 
 export function startServer(data) {
     return request({
-        url: '/createServer',
+        url: '/startServer',
         method: 'post',
         data
     })
@@ -62,5 +62,13 @@ export function getSocketInfo(params) {
         url: '/getSocketInfo',
         method: 'get',
         params:params
+    })
+}
+
+export function getNodeTree() {
+    return request({
+        url: '/getNodeTree',
+        method: 'get',
+        params:[]
     })
 }
