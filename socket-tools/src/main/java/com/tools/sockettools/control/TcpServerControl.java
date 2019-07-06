@@ -51,6 +51,7 @@ public class TcpServerControl {
             serverInfo.setPort((String)config.get("port"));
             serverInfo.setServerSocket(server.getServerSocket());
             serverInfo.setStatus("open");
+            serverInfo.setEncode((String)config.get("encode"));
 
             NodeTree nodeTree = new NodeTree();
             nodeTree.setId(id);
@@ -121,7 +122,8 @@ public class TcpServerControl {
         try {
             Socket socket = StaticStore.connectMap.get(config.get("id"));
             String rspMsg = (String)config.get("sendMsg");
-            SendThread sendThread = new SendThread(socket,rspMsg);
+            ServerInfo serverInfo = StaticStore.serverList.get(config.get("parentId"));
+            SendThread sendThread = new SendThread(socket,rspMsg,serverInfo.getEncode());
             new Thread(sendThread).start();
             returnResult.setSuccess(true);
         } catch (Exception e) {

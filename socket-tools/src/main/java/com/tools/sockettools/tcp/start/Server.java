@@ -26,6 +26,7 @@ public class Server implements Runnable{
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private String id;
     private int port ;
+    private String encode;
     private ServerSocket serverSocket;
     private ExecutorService pool;
 
@@ -34,6 +35,7 @@ public class Server implements Runnable{
     public Server(Map config) throws IOException {
         port = Integer.parseInt((String)config.get("port"));
         id = (String)config.get("id");
+        encode = (String)config.get("encode");
 
         pool = Executors.newFixedThreadPool(StaticStore.MAX_ACCPT_POOL_SIZE);
 
@@ -62,7 +64,7 @@ public class Server implements Runnable{
                 //serverSocket.setSoTimeout(3000);
                 socket = serverSocket.accept();
 
-                pool.execute(new RecvThread(socket));
+                pool.execute(new RecvThread(socket,encode));
 
                 String childId = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
                 StaticStore.connectMap.put(childId, socket);

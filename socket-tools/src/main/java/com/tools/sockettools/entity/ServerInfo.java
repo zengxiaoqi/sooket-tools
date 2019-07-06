@@ -16,6 +16,7 @@ public class ServerInfo {
     String id;  //id
     String port; //端口
     String status;  //监听状态
+    String encode;  //编码
     ServerSocket serverSocket;  //监听socket
     Socket socket;  //连接socket
     String message; //接收到的消息

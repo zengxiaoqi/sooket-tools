@@ -99,7 +99,18 @@
                         <el-input clearable v-model="editFormModel.port"></el-input>
                     </el-form-item>
                 </el-col>
-
+                <el-col :span="12">
+                    <el-form-item label="字符编码：" prop="port" label-width="100px">
+                        <el-select v-model="editFormModel.encode" filterable placeholder="请选择">
+                            <el-option
+                                v-for="item in options"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-col>
             </el-form>
             <span slot="footer" class="ec-dialog-footer">
           <el-button size="small" v-bind:disabled="disabledBool" type="primary" @click="submit">提交</el-button>
@@ -164,6 +175,7 @@ export default {
                 id: "",
                 ip: "",
                 port: "",
+                encode: "utf-8",
                 statue: "",
                 recvMsg: "",
                 sendMsg: "",
@@ -172,6 +184,7 @@ export default {
             //弹框form表单校验规则
             editFormRules: {
                 /*id: [{ required: true, message: "该输入项为必填项!" }],*/
+                encode: [{required: true, message: "该选择项为必填项!" }],
                 port: [{ required: true, message: "该输入项为必填项!" }],
             },
             readonly: true,
@@ -183,6 +196,16 @@ export default {
             recvMsg: "",
             clearTimeSet: null,
             localIP: document.location.hostname,
+            options: [{
+                value: 'GBK',
+                label: 'GBK'
+            }, {
+                value: 'UTF-8',
+                label: 'UTF-8'
+            }, {
+                value: 'ISO_8859_1',
+                label: 'ISO_8859_1'
+            }],
         }
     },
     mounted() {
@@ -323,6 +346,7 @@ export default {
 
             let data = {
                 id: _this.childNode["id"],
+                parentId: _this.childNode["parentId"],
                 sendMsg : _this.sendMsg,
             }
             sendData(data).then(response => {

@@ -22,9 +22,11 @@ public class RecvThread extends Thread {
 
     // 和本线程相关的Socket
     Socket socket = null;
+    String encode;
 
-    public RecvThread(Socket socket) {
+    public RecvThread(Socket socket, String encode) {
         this.socket = socket;
+        this.encode = encode;
         StaticStore.socketMap.put(socket,new StringBuffer());
     }
 
@@ -88,7 +90,7 @@ public class RecvThread extends Thread {
                     break;
                 }
             }
-            return new String(buffer, 0, length, "UTF-8");
+            return new String(buffer, 0, length, encode);
         } catch (Exception e) {
             return "";
         }
