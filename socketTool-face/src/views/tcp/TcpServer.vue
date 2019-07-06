@@ -176,7 +176,8 @@ export default {
             },
             readonly: true,
             hasRowSelect: true,
-            currentRow: null,
+            childNode: null,
+            serverNode: null,
             checkedHex: false,
             sendMsg: "",
             recvMsg: "",
@@ -213,14 +214,14 @@ export default {
             console.log(data);
             if(data.leaf) {
                 console.log("点击叶子节点，显示数据");
-                _this.currentRow = data;
+                _this.childNode = data;
                 let params = {
                     parentId: data.parentId,
                     id: data.id,
                 };
                 _this.getTableData(params);
             }else {
-
+                _this.serverNode = data;
                 let param = {id: data.id};
                 getServerInfo(param).then(response => {
                     console.log(response.data);
@@ -302,13 +303,13 @@ export default {
             let _this = this;
             //根据选中行的ID找到发送消息框和接收消息框的对应关系
             //console.log("---------"+row.id);
-            //_this.currentRow = row;
+            //_this.childNode = row;
             //_this.hasRowSelect = true;
         },
 
         sendData() {
             let _this = this;
-            if(_this.currentRow == null){
+            if(_this.childNode == null){
                 _this.$message({
                     type: 'info',
                     message: '请选择一行数据'
@@ -317,7 +318,7 @@ export default {
             }
 
             let data = {
-                id: _this.currentRow["id"],
+                id: _this.childNode["id"],
                 sendMsg : _this.sendMsg,
             }
             sendData(data).then(response => {
@@ -334,11 +335,11 @@ export default {
         getRecvMsg() {
             let _this = this;
             //根据当前选择行去后台请求数据
-            if(_this.currentRow != null) {
-                //_this.param.id = _this.currentRow["id"];
+            if(_this.childNode != null) {
+                //_this.param.id = _this.childNode["id"];
                 let param = {
-                    parentId: _this.currentRow["parentId"],
-                    id: _this.currentRow["id"]
+                    parentId: _this.childNode["parentId"],
+                    id: _this.childNode["id"]
                 }
                 getRcvMsg(param).then(response => {
                         //_this.$message.success("接收数据成功");
@@ -351,8 +352,8 @@ export default {
 
         startServer(){
             let _this = this;
-            if(_this.currentRow != null) {
-                createServer(_this.currentRow).then(response => {
+            if(_this.serverNode != null) {
+                createServer(_this.serverNode).then(response => {
                         _this.$message.success("启动监听成功");
                         //console.log("接收数据: "+response.data);
                         _this.tableData.data = response.data;
@@ -368,8 +369,8 @@ export default {
 
         closeServer(){
             let _this = this;
-            if(_this.currentRow != null) {
-                _this.param.id = _this.currentRow["id"];
+            if(_this.serverNode != null) {
+                _this.param.id = _this.serverNode["id"];
                 closeServer(_this.param).then(response => {
                         _this.$message.success("服务关闭成功");
                         //console.log("接收数据: "+response.data);

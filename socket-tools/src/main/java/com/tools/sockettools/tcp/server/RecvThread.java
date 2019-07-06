@@ -18,12 +18,12 @@ import java.util.Map;
  * 服务器线程处理类
  */
 @Slf4j
-public class ServerThread extends Thread {
+public class RecvThread extends Thread {
     public static Map<Socket,StringBuffer> socketMap = new HashMap<>();
     // 和本线程相关的Socket
     Socket socket = null;
 
-    public ServerThread(Socket socket) {
+    public RecvThread(Socket socket) {
         this.socket = socket;
         socketMap.put(socket,new StringBuffer());
     }
@@ -84,6 +84,9 @@ public class ServerThread extends Thread {
                 }
                 if(bis!=null) {
                     bis.close();
+                }
+                if (socket != null){
+                    socket.close();
                 }
 
             } catch (IOException e) {

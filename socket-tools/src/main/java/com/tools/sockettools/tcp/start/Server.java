@@ -1,27 +1,19 @@
 package com.tools.sockettools.tcp.start;
 
-import com.alibaba.fastjson.JSONArray;
 import com.tools.sockettools.common.util.JsonUtils;
 import com.tools.sockettools.control.TcpServerControl;
 import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.WebsocketData;
-import com.tools.sockettools.tcp.server.ServerThread;
+import com.tools.sockettools.tcp.server.RecvThread;
 import com.tools.sockettools.websocket.WebSocket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /*
@@ -61,7 +53,7 @@ public class Server {
 
                 log.debug("accpt :"+ socket.toString());
 
-                String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
+                String childId = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
                 connectMap.put(childId,socket);
 
                 NodeTree nodeTree = new NodeTree();
@@ -84,9 +76,9 @@ public class Server {
                     }
                 }
                 //创建一个新的线程
-                ServerThread serverThread=new ServerThread(socket);
+                RecvThread recvThread =new RecvThread(socket);
                 //启动线程
-                serverThread.start();
+                recvThread.start();
 
                 count++;//统计客户端的数量
                 System.out.println("客户端的数量："+count);
@@ -96,5 +88,15 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean stopServer(ServerSocket serverSocket){
+        try {
+            serverSocket.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

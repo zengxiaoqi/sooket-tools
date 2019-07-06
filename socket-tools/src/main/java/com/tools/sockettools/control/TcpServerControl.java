@@ -3,7 +3,8 @@ package com.tools.sockettools.control;
 import com.tools.sockettools.common.util.DateUtil;
 import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.ServerInfo;
-import com.tools.sockettools.tcp.server.ServerThread;
+import com.tools.sockettools.tcp.server.RecvThread;
+import com.tools.sockettools.tcp.server.SendThread;
 import com.tools.sockettools.tcp.start.Server;
 
 import org.springframework.web.bind.annotation.*;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.Selector;
@@ -87,58 +86,34 @@ public class TcpServerControl {
     @RequestMapping(value="/stopServer",method = RequestMethod.GET)
     @ResponseBody
     public ReturnResult stopServer(@RequestParam("id") String id) {
-        ServerSocket socket = null;
         ReturnResult returnResult = new ReturnResult();
-        try {
-            socket = serverList.get(id).getServerSocket();
-            if(socket!=null) {
-                socket.close();
-                returnResult.setSuccess(true);
-            }else {
-                returnResult.setSuccess(false);
-                returnResult.setMessage("关闭服务失败：id["+id+"]不存在");
-            }
-            serverList.get(id).setStatus("close");
 
-            returnResult.setData(serverList);
-        } catch (Exception e) {
-            e.printStackTrace();
-            returnResult.setSuccess(false);
-            returnResult.setMessage("关闭服务失败："+e.getMessage());
-        }
+        ServerSocket socket = serverList.get(id).getServerSocket();
+        Server server = new Server();
+        server.stopServer(socket);
+        returnResult.setSuccess(true);
+        serverList.get(id).setStatus("close");
+
+        returnResult.setData(serverList);
 
         return returnResult;
     }
 
     @RequestMapping(value="/sendRespons",method = RequestMethod.POST)
     @ResponseBody
-    public byte[] sendRespons(@RequestBody Map<String,Object> config) {
-        DataOutputStream dos=null;
-        Socket socket = null;
+    public ReturnResult sendRespons(@RequestBody Map<String,Object> config) {
+        ReturnResult returnResult = new ReturnResult();
         try {
-            socket = Server.connectMap.get(config.get("id"));
-            dos = new DataOutputStream(socket.getOutputStream());
+            Socket socket = Server.connectMap.get(config.get("id"));
             String rspMsg = (String)config.get("sendMsg");
-            dos.write(rspMsg.getBytes());
-            dos.flush();
-            //dos.close();
-            ServerThread.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
-            ServerThread.socketMap.get(socket).append(rspMsg).append("\n");
+            SendThread sendThread = new SendThread(socket,rspMsg);
+            new Thread(sendThread).start();
+            returnResult.setSuccess(true);
         } catch (Exception e) {
             e.printStackTrace();
-        }finally{
-            //关闭资源
-            try {
-                if(dos!=null) {
-                    dos.close();
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
-        return null;
+        return returnResult;
     }
 
     @RequestMapping(value="/getServerList",method = RequestMethod.GET)
@@ -157,7 +132,7 @@ public class TcpServerControl {
         ReturnResult returnResult = new ReturnResult();
         Socket socket = null;
         socket = Server.connectMap.get(id);
-        StringBuffer stringBuffer = ServerThread.socketMap.get(socket);
+        StringBuffer stringBuffer = RecvThread.socketMap.get(socket);
 
         returnResult.setSuccess(true);
         returnResult.setData(stringBuffer.toString());
@@ -173,11 +148,11 @@ public class TcpServerControl {
 
         Socket socket = null;
         socket = Server.connectMap.get(id);
-        StringBuffer stringBuffer = ServerThread.socketMap.get(socket);
+        StringBuffer stringBuffer = RecvThread.socketMap.get(socket);
 
         rspMap.put("ip", socket.getLocalAddress().toString());
         rspMap.put("port", socket.getLocalPort());
-        rspMap.put("remoteIp",socket.getRemoteSocketAddress().toString());
+        rspMap.put("remoteIp",socket.getInetAddress().getHostAddress());
         rspMap.put("remotePort",socket.getPort());
         rspMap.put("message",stringBuffer.toString());
         rspMap.put("status",serverInfo.getStatus());
