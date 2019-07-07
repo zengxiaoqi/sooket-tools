@@ -1,5 +1,6 @@
 import {Loading} from 'element-ui'
 import store from '@/store/';
+import {homeUrl} from "../env/env";
 export default {
     num: 0, // 重新连接次数
     loadingInstance: '', // Lading加载
@@ -13,7 +14,7 @@ export default {
     init (url, callback) {
         let self = this
         if (!url) return false
-        let api = 'ws://' + url
+        let api = url
         const Socket = new WebSocket(api);
 
         console.log("websocket创建成功 ");
@@ -83,7 +84,8 @@ export default {
         let windowUrl = window.location.href
         let path = windowUrl.slice(windowUrl.indexOf('#') + 1, windowUrl.length)
         if (this.num > 20) {
-            window.location.href = 'http://localhost:8080'
+            window.location.href = homeUrl;
+            //window.location.href = 'http://'+process.env.HOST+':'+process.env.PORT
         }
         this.num++
         if (path === '/') {

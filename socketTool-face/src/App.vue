@@ -6,6 +6,8 @@
 </template>
 
 <script>
+import {websocketUrl} from "./env/env";
+
 export default {
   name: 'App',
     created() {
@@ -24,7 +26,7 @@ export default {
         let Socket = this.$store.state.socket;
         if(Socket == null) {
             //this.$ws.init(process.env.VUE_APP_WEBSOCKET_URL,this.$ws.saveSocket)
-            this.$ws.init('localhost:9001/websocket/TCP_SERVER',this.$ws.saveSocket)
+            this.$ws.init(websocketUrl,this.$ws.saveSocket)
         }
     }
 }
