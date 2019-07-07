@@ -82,8 +82,8 @@ public class TcpServerControl {
         Server server = null;
         try {
             server = new Server(config);
-            //new Thread(server).start();
-            StaticStore.serverPoolMap.get(id).execute(server);
+            new Thread(server).start();
+            //StaticStore.serverPoolMap.get(id).execute(server);
             //重启监听
             serverInfo.setServerSocket(server.getServerSocket());
             StaticStore.serverList.get(id).setStatus("open");
