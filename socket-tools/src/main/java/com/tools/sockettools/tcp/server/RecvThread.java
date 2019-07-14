@@ -33,7 +33,8 @@ public class RecvThread extends Thread {
     //线程执行的操作，响应客户端的请求
     @Override
     public void run(){
-        System.out.println("--------------------");
+        log.info("----------接收线程启动----------");
+        log.info("socket: "+socket);
         BufferedInputStream bis = null;
         DataInputStream dis = null;
         try {
@@ -44,6 +45,7 @@ public class RecvThread extends Thread {
             byte[] MAX_BYTES = new byte[1024*1024];
             int i=0;
             while (dis.read(bytes) != -1) {
+                //System.out.println("-------接收报文------");
                 MAX_BYTES[i++] = bytes[0];
                 if (dis.available() == 0) {
                     //接收完一个报文
@@ -53,16 +55,18 @@ public class RecvThread extends Thread {
                 }
             }
 
-            System.out.println("-------客户端断开连接-------");
+            log.info("-------断开连接-------");
+            System.out.println("socket: "+ socket);
             //删除TcpServerControl.nodeTreeList中对应节点
-            String childId = socket.getLocalSocketAddress() + ":" + socket.getPort();
+            String childId = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
             StaticStore.deleteChildById(childId);
 
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            log.error("接收线程异常："+e.getMessage());
         }finally{
-            System.out.println("-------关闭资源---------");
+            log.info("-------关闭资源---------");
             //关闭资源
             try {
                 if(dis!=null) {
@@ -71,12 +75,13 @@ public class RecvThread extends Thread {
                 if(bis!=null) {
                     bis.close();
                 }
-                if (socket != null){
+                if(!socket.isClosed()){
                     socket.close();
                 }
 
             } catch (IOException e) {
                 e.printStackTrace();
+                log.error("接收线程异常-IO关闭异常："+e.getMessage());
             }
         }
     }
@@ -99,6 +104,6 @@ public class RecvThread extends Thread {
     public static void appendMsg(Socket socket, String msg){
         StaticStore.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"收到数据: ");
         StaticStore.socketMap.get(socket).append(msg).append("\n");
-        System.out.println(StaticStore.socketMap.get(socket));
+        log.info(StaticStore.socketMap.get(socket).toString());
     }
 }

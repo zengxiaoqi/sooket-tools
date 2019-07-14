@@ -2,9 +2,11 @@
 <div>
     <!-- 工具条 -->
     <el-button type="primary" @click="addTcpServer" >新增</el-button>
+    <el-button type="primary" @click="delTcpServer" >删除</el-button>
     <el-button type="primary" :disabled="isOpen" @click="startServer" >启动监听</el-button>
     <el-button type="primary" :disabled="!isOpen" @click="closeServer" >停止监听</el-button>
     <el-button type="primary" @click="sendData" >发送数据</el-button>
+    <el-button type="primary" @click="freshLog" >{{freshButton}}</el-button>
     <el-row>
         <el-col :span="4">
             <el-tree :data="serverList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
@@ -58,7 +60,7 @@
 
     <!--编辑弹框-->
     <el-col :span="24">
-        <el-dialog :title="title" :visible.sync="editFormVisible" :close-on-click-modal="true" top>
+        <el-dialog :title="title" :visible.sync="editFormVisible" :close-on-click-modal="true" center>
             <!--el-form 的ref值必须为editForm -->
             <el-form :model="editFormModel" label-width="80px" :rules="editFormRules" ref="editFormModel">
                 <el-col :span="12">
@@ -96,7 +98,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP,getSocketInfo,startServer,getNodeTree } from '@/api/tcp'
+import { getServerInfo,createServer,sendData,getRcvMsg,closeServer,getIP,getSocketInfo,startServer,getNodeTree,delServer } from '@/api/tcp'
 import splitPane from 'vue-splitpane'
 
 export default {
@@ -167,6 +169,8 @@ export default {
             sendMsg: "",
             recvMsg: "",
             clearTimeSet: null,
+            refreshLog: false,
+            freshButton: "刷新日志",
             localIP: document.location.hostname,
             options: [{
                 value: 'GBK',
@@ -184,8 +188,9 @@ export default {
         //this.getTableData();
         this.getIP();
         //设置定时任务-定时获取服务端接收的报文
-        //this.setTime();
-        //this.treeData = this.$store.state.websocket.serverList;
+        if(this.refreshLog){
+            this.setTime();
+        }
         this.getNodeTree();
     },
     beforeDestroy() {    //页面关闭时清除定时器
@@ -196,7 +201,13 @@ export default {
 
     },
     watch: {
-
+        refreshLog(newValue,oldVuale){
+            if(newValue){
+                this.setTime();
+            }else if(null != this.clearTimeSet){
+                clearInterval(this.clearTimeSet);
+            }
+        }
     },
     methods: {
         getIP() {
@@ -384,6 +395,34 @@ export default {
                     });
             }else {
                 _this.$message.warning("请选择一行数据")
+            }
+        },
+        delTcpServer(){
+            let _this = this;
+            if(_this.serverNode != null) {
+                _this.param.id = _this.serverNode["id"];
+                delServer(_this.param).then(response => {
+                        _this.$message.success("服务删除成功");
+                        _this.isOpen = false;
+                        //_this.$store.dispatch('connect/setServerList', response.data);
+                        _this.getNodeTree();    //实时刷新数据
+                    }
+                ).catch(
+                    response => {
+                        console.log('catch data::', response)
+                    });
+            }else {
+                _this.$message.warning("请选择一行数据")
+            }
+
+        },
+        freshLog(){
+            let _this = this;
+            _this.refreshLog = !_this.refreshLog;
+            if(_this.refreshLog){
+                _this.freshButton = "停止刷新";
+            }else{
+                _this.freshButton = "刷新日志";
             }
         },
     },

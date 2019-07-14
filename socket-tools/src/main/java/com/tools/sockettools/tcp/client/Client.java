@@ -1,5 +1,11 @@
 package com.tools.sockettools.tcp.client;
 
+import com.tools.sockettools.tcp.server.RecvThread;
+import com.tools.sockettools.tcp.server.SendThread;
+import com.tools.sockettools.tcp.server.StaticStore;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,33 +16,46 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /*
  * 客户端
  */
+@Slf4j
+@Data
 public class Client {
     private String id;
     private int port ;
     private String ip;
-    public static Map<String,Socket> connectMap = new HashMap<>();
+    private String encode;
+
+    private ExecutorService pool;
 
     public Socket createClient(Map config) {
-        port = Integer.parseInt((String)config.get("port"));
+        if(config.get("port") instanceof String) {
+            port = Integer.parseInt((String) config.get("port"));
+        }else if(config.get("port") instanceof Integer){
+            port = (Integer) config.get("port");
+        }
         ip = (String)config.get("ip");
-        id = (String)config.get("id");
+        encode = (String)config.get("encode");
         Socket socket= null;
         try {
             socket = new Socket(ip, port);
+            id = socket.getInetAddress().getHostAddress()+":"+socket.getLocalPort();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        connectMap.put(id,socket);
+        StaticStore.connectMap.put(id,socket);
+
+        pool = Executors.newFixedThreadPool(2);
+        StaticStore.accptPoolMap.put(id, pool);
+
         return socket;
     }
 
-    public void closeClient(Map config) {
-        id = (String)config.get("id");
-        Socket socket= connectMap.get(id);
+    public void closeClient(Socket socket) {
         try {
             socket.close();
         } catch (IOException e) {
@@ -44,37 +63,15 @@ public class Client {
         }
     }
 
-    public String sendMsg(Socket socket, String Msg) {
-        String info=null;
-        try {
-            //1.创建客户端Socket，指定服务器地址和端口
+    public void recvMsg(Socket socket, String encode) {
+        RecvThread recvThread = new RecvThread(socket,encode);
+        pool.execute(recvThread);
+        return ;
+    }
 
-            //2.获取输出流，向服务器端发送信息
-            OutputStream os=socket.getOutputStream();//字节输出流
-            /*os.write(Msg);*/
-            PrintWriter pw=new PrintWriter(os);//将输出流包装为打印流
-            pw.write(Msg);
-            pw.flush();
-            socket.shutdownOutput();//关闭输出流
-            //3.获取输入流，并读取服务器端的响应信息
-            InputStream is=socket.getInputStream();
-            BufferedReader br=new BufferedReader(new InputStreamReader(is));
-
-            while((info=br.readLine())!=null){
-                System.out.println("我是客户端，服务器说："+info);
-            }
-            //4.关闭资源
-            br.close();
-            is.close();
-            pw.close();
-            os.close();
-            //socket.close();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return info;
+    public void sendMsg(Socket socket, String sendMsg,String encode,boolean hexStr) {
+        SendThread sendThread = new SendThread(socket,sendMsg,encode,hexStr);
+        pool.execute(sendThread);
+        return ;
     }
 }

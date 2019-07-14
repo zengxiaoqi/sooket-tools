@@ -2,6 +2,7 @@ package com.tools.sockettools;
 
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +12,8 @@ public class Test {
         //test.testCreateServer();
         test.testsendRespons();
         //test.teststopServer();
+        Integer integer = (Integer)10;
+        Long  l = new Long(10);
     }
 
     public void testCreateServer(){

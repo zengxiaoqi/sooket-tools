@@ -49,6 +49,13 @@ export function closeServer(params) {
     })
 }
 
+export function delServer(params) {
+    return request({
+        url: '/delServer',
+        method: 'get',
+        params:params
+    })
+}
 export function getIP() {
     return request({
         url: '/getIP',
@@ -70,5 +77,57 @@ export function getNodeTree() {
         url: '/getNodeTree',
         method: 'get',
         params:[]
+    })
+}
+
+
+export function createClient(data) {
+    return request({
+        url: '/createClient',
+        method: 'post',
+        data
+    })
+}
+
+
+export function getClientList() {
+    return request({
+        url: '/getClientList',
+        method: 'get',
+        params:[]
+    })
+}
+
+export function stopClient(data) {
+    return request({
+        url: '/stopClient',
+        method: 'post',
+        data
+    })
+}
+
+export function openClient(data) {
+    return request({
+        url: '/openClient',
+        method: 'post',
+        data
+    })
+}
+
+
+export function delClient(data) {
+    return request({
+        url: '/delClient',
+        method: 'post',
+        data
+    })
+}
+
+
+export function sendMsg(data) {
+    return request({
+        url: '/sendMsg',
+        method: 'post',
+        data
     })
 }

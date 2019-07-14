@@ -30,6 +30,7 @@ public class SendThread implements Runnable{
             }else {
                 outputStream.write(sendMsg.getBytes(encode));
             }
+            outputStream.flush();
             StaticStore.socketMap.get(socket).append("["+DateUtil.getNowStrDate()+"]"+"发送数据: ");
             StaticStore.socketMap.get(socket).append(sendMsg).append("\n");
         } catch (IOException e) {

@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * @author Administrator
+ * @author zengxq
  */
 @RestController
 public class TcpServerControl {
@@ -104,7 +104,7 @@ public class TcpServerControl {
 
         Server server = new Server();
         server.stop(id,StaticStore.serverList.get(id).getServerSocket());
-        server.shutdownAndAwaitTermination(StaticStore.serverPoolMap.get(id));
+        StaticStore.shutdownAndAwaitTermination(StaticStore.serverPoolMap.get(id));
 
         returnResult.setSuccess(true);
 
@@ -112,6 +112,25 @@ public class TcpServerControl {
         /* 清空nodeList内容？ */
         //StaticStore.deleteChildByParentId(id);
         //returnResult.setData(StaticStore.nodeTreeList);
+
+        return returnResult;
+    }
+    @RequestMapping(value="/delServer",method = RequestMethod.GET)
+    @ResponseBody
+    public ReturnResult delServer(@RequestParam("id") String id) {
+        ReturnResult returnResult = new ReturnResult();
+
+        stopServer(id);
+
+        returnResult.setSuccess(true);
+
+        StaticStore.serverList.remove(id);
+        StaticStore.serverMap.remove(id);
+
+        NodeTree pareNode = StaticStore.getParentNodeById(id);
+        StaticStore.nodeTreeList.remove(pareNode);
+
+        returnResult.setData(StaticStore.nodeTreeList);
 
         return returnResult;
     }

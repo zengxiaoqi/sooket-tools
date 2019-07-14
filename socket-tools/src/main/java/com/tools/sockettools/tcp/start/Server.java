@@ -81,8 +81,9 @@ public class Server implements Runnable{
             System.out.println("---------监听结束，清理线程---------");
             StaticStore.deleteChildByParentId(id);
             StaticStore.socketMap.remove(socket);
-
+            StaticStore.connectMap.remove(socket);
             //shutdownAndAwaitTermination(pool);
+            socket.shutdownOutput();
             socket.close();
             serverSocket.close();
         } catch (IOException e) {
@@ -108,23 +109,5 @@ public class Server implements Runnable{
         }
     }
 
-    public void shutdownAndAwaitTermination(ExecutorService pool) {
-        pool.shutdown(); // Disable new tasks from being submitted
-        try {
-            // Wait a while for existing tasks to terminate
-            if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                pool.shutdownNow(); // Cancel currently executing tasks
-                // Wait a while for tasks to respond to being cancelled
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                    System.err.println("Pool did not terminate");
-                }
-            }
-        } catch (InterruptedException ie) {
-            // (Re-)Cancel if current thread also interrupted
-            pool.shutdownNow();
-            // Preserve interrupt status
-            Thread.currentThread().interrupt();
-        }
-        System.out.println("-----------线程池清理结束--------");
-    }
+
 }
