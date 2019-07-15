@@ -1,12 +1,10 @@
 package com.tools.sockettools.entity;
 
-import com.tools.sockettools.tcp.start.Server;
 import lombok.Data;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
 @Data
 public class ServerInfo {

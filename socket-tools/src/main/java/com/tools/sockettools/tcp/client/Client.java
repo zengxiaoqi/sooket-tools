@@ -1,20 +1,13 @@
 package com.tools.sockettools.tcp.client;
 
-import com.tools.sockettools.tcp.server.RecvThread;
-import com.tools.sockettools.tcp.server.SendThread;
-import com.tools.sockettools.tcp.server.StaticStore;
+import com.tools.sockettools.tcp.common.RecvThread;
+import com.tools.sockettools.tcp.common.SendThread;
+import com.tools.sockettools.common.StaticStore;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

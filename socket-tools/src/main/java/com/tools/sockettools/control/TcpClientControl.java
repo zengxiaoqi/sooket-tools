@@ -1,22 +1,13 @@
 package com.tools.sockettools.control;
 
 import com.tools.sockettools.entity.ClientInfo;
-import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.tcp.client.Client;
-import com.tools.sockettools.tcp.server.SendThread;
-import com.tools.sockettools.tcp.server.StaticStore;
-import com.tools.sockettools.tcp.start.Server;
+import com.tools.sockettools.tcp.common.SendThread;
+import com.tools.sockettools.common.StaticStore;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.Selector;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
