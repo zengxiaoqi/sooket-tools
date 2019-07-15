@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>开发集成工具</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+  <div class="page">
+    <div  class="main" >
+      <webview id="webview" class="webview" style="display: inline-flex;"  preload="./preload/window_sdk.js"></webview>
+    </div>
+  </div>
+
+  <script>
+      require('./renderer.js')
+      const electron =  require('electron');
+      const ipc = electron.ipcRenderer;
+
+      const child_process = require('child_process');
+      let  spawn = child_process.spawn;
+
+      const remote = require('electron').remote;
+      let dialog =  remote.dialog;
+      var currentWindow =  remote.getCurrentWindow();
+      var currentWebContent =  remote.getCurrentWebContents();
+
+      //get config from main.js
+      let config = ipc.sendSync('get-config');
+      console.log(config);
+
+      let webview=document.getElementById('webview');
+      webview.src=config.APP_URL
+
+      // webview加载完毕事件
+      webview.addEventListener("dom-ready", function() {
+          console.log("webview load complete !");
+          //test send msg to webview
+          //webview.send("request");
+
+          //currentWindow.focus();
+
+          currentWindow.focusOnWebView();
+      });
+
+      //监听主线程发送的事件
+      ipc.on('sendMsgToRender', (event, message) => {
+          console.log("receive from main.js")
+          console.log(event);
+          console.log(message);
+          var cmd =  message.cmd;
+          if("openDevtooler" == cmd){
+               //webview.openDevTools();
+          }else if("closeDevtooler" == cmd){
+               webview.closeDevTools();
+          }else if("refreshPage" == cmd){
+              webview.reload();
+          }else if("sendToWebView" == cmd){
+              var params = message.params;
+              webview.send("request",params);
+          }else if("clearCache" == cmd){
+              webview.getWebContents().session.clearCache( );
+              webview.getWebContents().session.clearStorageData( );
+          }
+      })
+
+      // 接受从webview的发来消息
+      webview.addEventListener('ipc-message',function(event){
+          console.log("recive the data from the webview")
+          console.log(event);
+          console.info(event.channel);
+          var rdata = event.channel;
+          var cmd = rdata.cmd;
+          var params =  rdata.params;
+          console.log(cmd);
+          console.log(params);
+          if(cmd == "openfolder"){
+              while(params.indexOf("/")>0){
+                  params =  params.replace("/","\\");
+              }
+              spawn('explorer.exe', [params]);
+          }else if(cmd=="selectfolder"){
+              console.log(dialog)
+              dialog.showOpenDialog({ properties: [  'openDirectory' ]},function(e){
+                  console.log(e)
+                  webview.send("request",{"cmd":"selectfloderback","params":e});
+              });
+          }
+      });
+  </script>
+  </body>
+</html>

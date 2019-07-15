@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>开发集成工具</title>
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body style="color:#000;background-color:#97D9D3;text-align: center ">
+    <div  id="didLoading"  >
+      正在加载中
+    </div>
+  </body>
+    <script>
+      require('./renderer.js')
+      const remote = require('electron').remote;
+      var currentWindow =  remote.getCurrentWindow();
+      var currentWebContent =  remote.getCurrentWebContents();
+
+      const ipc = require('electron').ipcRenderer;
+      let config = ipc.sendSync('get-config');
+      console.log(config);
+      var src=config.APP_URL;
+
+      var loading = document.getElementById("didLoading");
+      var request = require('request');
+
+      currentWebContent.on("dom-ready",function(){
+          console.log("index.html load complete !");
+          loading.innerHTML =  "尝试访问"+src+" ";
+
+          testreq();
+      })
+
+      function testreq(){
+          request(src, function (error, response, body) {
+              console.log(response)
+              if (!error && response.statusCode == 200) {
+                  loading.innerHTML =  loading.innerHTML+" 成功，准备跳转...<br/>";
+                  ipc.send("openwebview");
+              }else{
+                  loading.innerHTML =  loading.innerHTML+" 失败<br/>";
+                  loading.innerHTML =  loading.innerHTML+ "尝试访问"+src+" ";
+                  loading.scrollTop = loading.scrollHeight;
+                  sleep(1000);
+                  testreq();
+              }
+          });
+      }
+
+
+      function sleep(milliSeconds) {
+          var StartTime = new Date().getTime()
+          let i = 0
+          while (new Date().getTime() < StartTime + milliSeconds) ;
+      }
+  </script>
+
+</html>
