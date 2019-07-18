@@ -56,6 +56,27 @@ export const constantRoutes =[
       },
     ]
   },
+    {
+        path: '/http',
+        component: Layout,
+        redirect: 'noRedirect',
+        name: 'HTTP',
+        meta: { title: 'HTTP', icon: 'net' },
+        children: [
+            {
+                path: 'http-server',
+                name: 'http-server',
+                component: () => import('@/views/http/http-server'),
+                meta: { title: 'http-server', icon: 'server' }
+            },
+            {
+                path: 'http-client',
+                name: 'http-client',
+                component: () => import('@/views/http/http-client'),
+                meta: { title: 'http-client', icon: 'server' }
+            },
+        ]
+    },
   {
     path: '/format',
     component: Layout,

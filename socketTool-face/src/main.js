@@ -13,6 +13,10 @@ import 'element-ui/lib/theme-chalk/index.css'
 import '@/styles/index.scss' // global css
 import '@/icons' // icon
 
+//代码高亮文件引入
+import VueHighlightJS from './utils/vue-highlightjs.js'
+Vue.use(VueHighlightJS);
+
 // 生产环境中注释掉以下语句
 //import '../mock/index.js'
 

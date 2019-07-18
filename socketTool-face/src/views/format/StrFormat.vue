@@ -18,7 +18,14 @@
             </el-col>
             <el-col :span="10">
                 输出字符串：
-                <el-input type="textarea" :rows="20" v-model="outputStr" ></el-input>
+                <!--<el-input type="textarea" :rows="20" v-model="outputStr" ></el-input>-->
+                <div>
+                    <!-- 使用高亮指令 -->
+                    <pre style="pre:hljs" v-highlightjs="outputStr">
+                        <code :class="type"><!-- 声明什么类型的代码 -->
+                        </code>
+                    </pre>
+                </div>
             </el-col>
         </el-row>
     </div>
@@ -26,7 +33,6 @@
 
 <script>
   import { formatStr } from '@/api/format'
-
   export default {
     name: "StrFormat",
     data() {
@@ -35,6 +41,9 @@
             inputStr: "",
             outputStr: "",
         }
+    },
+    mounted(){
+
     },
     methods: {
         formatStr(){
@@ -58,7 +67,25 @@
     }
 }
 </script>
+<style>
+    .hljs {
+        display: block;
+        overflow-x: auto;
+        padding: 0.0em;
+        background: #23241f;
+    }
 
+    pre {
+        display: block;
+        font-family: monospace;
+        white-space: pre;
+        margin: 0px 0px;
+    }
+    pre {
+        hljs: his;
+    }
+
+</style>
 <style scoped>
 
 </style>
