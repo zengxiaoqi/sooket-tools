@@ -10,10 +10,10 @@
 export default {
     name: "VueAceEditor",
     props: {
-        /*vaule: {
+        contentVal: {
             type: String,
             default: ''
-        },*/
+        },
         lang: {
             type: String,
             default: 'html'
@@ -42,6 +42,7 @@ export default {
     watch: {
         content: function (val) {
             this.$emit("contentChange", val);
+            this.$emit("update:contentVal", val);
         },
     },
     methods: {
@@ -60,6 +61,7 @@ export default {
         },
         editorChange: function (val) {
             this.$emit("contentChange", val);
+            this.$emit("update:contentVal", val);
         },
         setContent: function (val) {
             this.content = val;

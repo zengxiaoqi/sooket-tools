@@ -14,18 +14,20 @@
         <el-row>
             <el-col :span="10">
                 输入字符串：
-                <el-input type="textarea" :rows="20" v-model="inputStr" ></el-input>
+                <!--<el-input type="textarea" :rows="20" v-model="inputStr" ></el-input>-->
+                <vue-ace-editor :contentVal.sync="inputStr" :lang="type" :width="600" :height="500"></vue-ace-editor>
             </el-col>
             <el-col :span="10">
                 输出字符串：
                 <!--<el-input type="textarea" :rows="20" v-model="outputStr" ></el-input>-->
-                <div>
-                    <!-- 使用高亮指令 -->
+                <vue-ace-editor ref="aceEditor" :lang="type" :width="600" :height="500"></vue-ace-editor>
+                <!--<div>
+                    &lt;!&ndash; 使用高亮指令 &ndash;&gt;
                     <pre style="pre:hljs" v-highlightjs="outputStr">
-                        <code :class="type"><!-- 声明什么类型的代码 -->
+                        <code :class="type">&lt;!&ndash; 声明什么类型的代码 &ndash;&gt;
                         </code>
                     </pre>
-                </div>
+                </div>-->
             </el-col>
         </el-row>
     </div>
@@ -33,8 +35,12 @@
 
 <script>
   import { formatStr } from '@/api/format'
+  import VueAceEditor from "@/components/VueAceEditor"
+
   export default {
-    name: "StrFormat",
+    name: "StringFormat",
+    components: {VueAceEditor},
+
     data() {
         return {
             type: "",
@@ -61,9 +67,13 @@
           }
           formatStr(data).then(res => {
               this.outputStr = res.data.outputStr;
+              this.setContent(this.outputStr);
               this.$message.success("解析成功")
             });
-        }
+        },
+        setContent: function (val) {
+            this.$refs.aceEditor.setContent(val);
+        },
     }
 }
 </script>

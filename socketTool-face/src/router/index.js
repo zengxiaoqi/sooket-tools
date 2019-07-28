@@ -45,13 +45,13 @@ export const constantRoutes =[
       {
         path: 'tcp-server',
         name: 'tcp-server',
-        component: () => import('@/views/tcp/TcpServer'),
+        component: () => import('@/views/tcp/tcp-server'),
         meta: { title: 'tcp-server', icon: 'server' }
       },
       {
         path: 'tcp-client',
         name: 'tcp-client',
-        component: () => import('@/views/tcp/TcpClient'),
+        component: () => import('@/views/tcp/tcp-client'),
         meta: { title: 'tcp-client', icon: 'server' }
       },
     ]
@@ -85,7 +85,7 @@ export const constantRoutes =[
       {
         path: 'string-format',
         name: 'format',
-        component: () => import('@/views/format/StrFormat'),
+        component: () => import('@/views/format/string-format'),
         meta: { title: 'StrFormat', icon: 'format-text' }
       }
     ]
@@ -94,41 +94,7 @@ export const constantRoutes =[
   { path: '*', redirect: '/404', hidden: true }
 ]
 
-export const custRoutes = [
-  {
-    path: '/tcp',
-    component: Layout,
-    redirect: '/tcp/tcp-server',
-    name: 'TCP',
-    meta: { title: 'TCP', icon: 'net' },
-    children: [
-      {
-        path: 'tcp-server',
-        name: 'TCP服务端',
-        component: () => import('@/views/tcp/TcpServer'),
-        meta: { title: 'tcp-server', icon: 'server' }
-      },
-      {
-        path: 'tcp-client',
-        name: 'TCP客户端',
-        component: () => import('@/views/tcp/TcpClient'),
-        meta: { title: 'tcp-client', icon: 'server' }
-      }]
-  },
-  {
-    path: '/format',
-    component: Layout,
-    redirect: '/format/string-format',
-    children: [
-      {
-        path: 'string-format',
-        name: '字符串格式化',
-        component: () => import('@/views/format/StrFormat'),
-        meta: { title: 'StrFormat', icon: 'format-text' }
-      }
-    ]
-  }
-]
+
 
 export default new Router({
   routes: constantRoutes
