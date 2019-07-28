@@ -1,8 +1,11 @@
 <template>
     <div>
-        <el-button type="success" size="mini" icon="el-icon-plus" circle @click="addOneRow"></el-button>
-        <el-button type="danger" size="mini" icon="el-icon-minus" circle @click="delSelectRow"></el-button>
-        <slot></slot>
+        <el-col :span="24">
+            <el-button type="success" size="mini" icon="el-icon-plus" circle @click="addOneRow"></el-button>
+            <el-button type="danger" size="mini" icon="el-icon-minus" circle @click="delSelectRow"></el-button>
+            <slot name="button"></slot>
+        </el-col>
+
         <el-table :data="paramList" border
                   @selection-change="handleSelectionChange">
             <el-table-column
@@ -23,7 +26,12 @@
                     <el-input v-model="scope.row.value" placeholder="value"></el-input>
                 </template>
             </el-table-column>
-            <slot></slot>
+            <el-table-column property="desc" label="DESCRIPTION">
+                <template slot-scope="scope">
+                    <el-input v-model="scope.row.desc" placeholder="description"></el-input>
+                </template>
+            </el-table-column>
+            <slot name="table-column"></slot>
         </el-table>
     </div>
 </template>
@@ -68,7 +76,8 @@ export default {
         },
 
         listChange: function () {
-            this.$emit('listChange', this.paramList);
+            //this.$emit('listChange', this.paramList);
+            this.$emit('update:paramList', this.paramList); //将this.paramList传递给父组件的:param-list.sync绑定的变量
         }
     }
 }

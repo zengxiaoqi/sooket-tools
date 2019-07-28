@@ -5,6 +5,9 @@ import App from './App'
 import router from './router'
 import ElementUI from 'element-ui'
 
+import axios from 'axios'
+Vue.prototype.$ajax = axios ;    //this.$ajax调用axios
+
 import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
 //element-ui css 不然无法显示左侧菜单栏数据
