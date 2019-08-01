@@ -34,6 +34,9 @@ Vue.use(store)
 import ws from '@/utils/ws'
 Vue.prototype.$ws = ws
 
+import idexDB from '@/utils/indexedDB'
+Vue.prototype.$idexDB = idexDB
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

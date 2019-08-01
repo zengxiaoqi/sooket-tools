@@ -11,7 +11,8 @@
 
 <script>
 import {websocketUrl} from "./env/env";
-
+import IndexedDB from "@/utils/indexedDB.js"
+import store from '@/store/';
 export default {
   name: 'App',
     created() {
@@ -32,6 +33,14 @@ export default {
             //this.$ws.init(process.env.VUE_APP_WEBSOCKET_URL,this.$ws.saveSocket)
             this.$ws.init(websocketUrl,this.$ws.saveSocket)
         }
+
+        //创建indexedDB数据库
+        /*var db = null;
+        IndexedDB.openDB(store.state.indexedDB.dbName,store.state.indexedDB.version,db,null,function (db) {
+            console.log("保存DB信息");
+            console.log(db);
+            store.dispatch("indexedDB/setdb", db);
+        });*/
     }
 }
 </script>

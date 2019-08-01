@@ -1,14 +1,17 @@
+/**
+ * websocket 通信
+ */
 import {Loading} from 'element-ui'
 import store from '@/store/';
 import {homeUrl} from "../env/env";
 export default {
     num: 0, // 重新连接次数
-    loadingInstance: '', // Lading加载
+    loadingInstance: '', // Loading.service(options)返回的Lading实例,可通过调用该实例的 close 方法来关闭它
     loadingOptions: { // Loading选项
-        lock: true,
-        text: '连接断开，正在重连',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.8)'
+        lock: true, //同 v-loading 指令中的 lock 修饰符 true false
+        text: '连接断开，正在重连',  //显示在加载图标下方的加载文案
+        spinner: 'el-icon-loading', //自定义加载图标类名
+        background: 'rgba(0, 0, 0, 0.8)'    //遮罩背景色
     },
     // 创建Socket实例
     init (url, callback) {
@@ -91,7 +94,11 @@ export default {
         if (path === '/') {
             return false
         }
-        this.loadingInstance = Loading.service(this.loadingOptions)
+        this.loadingInstance = Loading.service(this.loadingOptions);
+        //测试方便先定时关闭loading
+        /*setTimeout(() => {
+            this.loadingInstance.close();
+        }, 2000);*/
         this.init(url, callback)
     },
 

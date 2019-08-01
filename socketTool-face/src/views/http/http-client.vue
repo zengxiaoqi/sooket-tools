@@ -1,6 +1,8 @@
 <template>
     <el-row>
         <el-col :span="4">
+            <el-button type="primary" size="mini" icon="el-icon-plus" @click="addOne">新增</el-button>
+            <el-button type="primary" size="mini" icon="el-icon-minus" @click="delOne">删除</el-button>
             <el-tree :data="httpList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
         </el-col>
         <el-col :span="20">
@@ -8,7 +10,7 @@
                 <el-input v-model="httpURL" placeholder="请输入URL">
                     <el-select  v-model="httpMethod"  placeholder="请选择" slot="prepend">
                         <el-option
-                            v-for="item in options"
+                            v-for="item in methodOptions"
                             :key="item.value"
                             :label="item.label"
                             :value="item.value">
@@ -50,7 +52,7 @@
                     <!--<params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" @listChange="listChange"></params-table>-->
                     <params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" ></params-table>
                     <!--<el-input v-model="bodyText" v-else-if="bodyRadio == 'row'" type="textarea" rows="10"></el-input>-->
-                    <vue-ace-editor :lang="contentType.type" @editorChange="getBodyText" v-else-if="bodyRadio == 'row'" ></vue-ace-editor>
+                    <vue-ace-editor :lang="contentType.type" :contentVal.sync="bodyText" v-else-if="bodyRadio == 'row'" ></vue-ace-editor>
                     <file-upload v-else="bodyRadio == 'binary'"
                                  ref="uploadFile"
                                  :headers="fileUploadParam.headers"
@@ -87,8 +89,18 @@
                 <el-button @click="setContent">高亮显示结果</el-button>
                 <vue-ace-editor ref="aceEditor" :lang="txtType" @editorChange="contentChange" ></vue-ace-editor>
             </div>
-
         </el-col>
+
+        <el-dialog
+            title="新建HTTP请求"
+            :visible.sync="dialogVisible"
+            width="30%"
+            close-on-click-modal>
+            <div>Request name</div>
+            <el-input v-model="httpLabel"></el-input>
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addTree">确 定</el-button>
+        </el-dialog>
     </el-row>
 </template>
 
@@ -100,30 +112,50 @@ import FileUpload from "./compments/FileUpload"
 import {axiosGet, axiosPost} from "@/api/axiosApi"
 import ObjectUtil from "@/utils/ObjectUtil.js"
 import VueAceEditor from "@/components/VueAceEditor"
+import IndexedDB from "@/utils/indexedDB.js"
+import { guuid } from '@/utils/index.js'
+import { mapGetters,mapState } from "vuex";
 
 export default {
     name: "http-client",
     components: {ParamsTable, RadioGroup, FileUpload,VueAceEditor},
     comments: { ParamsTable },
+
+    mounted() {
+        /*IndexedDB.openDB(this.$store.state.indexedDB.dbName,
+                         this.$store.state.indexedDB.version,
+                        this.$store.state.indexedDB.db,
+                        this.dbInfo,this.saveDb);*/
+        //this.getTree();
+    },
+    created() {
+        //创建数据库和表
+        IndexedDB.openDB(this.dbName, this.version, this.db,this.dbInfo,this.saveDb);
+    },
+    watch: {
+        httpURL: function (val) {
+            //更新数据到 indexedDB
+        },
+    },
+    computed: {
+        //...mapGetters(['dbName','db','version']),
+        ...mapState({
+            dbName : state => state.indexedDB.dbName,
+            db : state => state.indexedDB.db,
+            version : state => state.indexedDB.version,
+            httpList : state => state.indexedDB.httpList,
+        }),
+
+    },
     data() {
         return {
-            httpList: [
-                {
-                    label: '一级 1',
-                    children: [{
-                        label: '二级 1-1',
-                        children: null,
-                        leaf: true,
-                    }],
-                    leaf: false,
-                },
-            ],
+
             defaultProps: {
                 children: 'children',
                 label: 'label',
                 leaf: 'leaf',
             },
-            options: [{
+            methodOptions: [{
                 value: 'GET',
                 label: 'GET'
             },{
@@ -155,7 +187,11 @@ export default {
             },
 
             ],
-            contentType: "TXT(text/plain)",
+            contentType: {
+                value: 'text/plain',
+                label: 'TXT(text/plain)',
+                type: "abc"
+            },
             contentTypeOpt: [{
                 value: 'text/plain',
                 label: 'TXT(text/plain)',
@@ -184,11 +220,7 @@ export default {
             ],
             httpMethod: "GET",
             httpURL: "",
-            ParamList: [{
-                key: "",
-                value: "",
-                desc: "",
-            }],
+            ParamList: [],
             activeTabName: "Params",
             multipleSelection: [],
             currentRow: null,
@@ -196,10 +228,10 @@ export default {
             bodyList: [],
             bodyText: null,
             httpBody: {
-                headers: "",
-                params: "",
+                headers: {},
+                params: {},
                 bodyContext: "",
-                cookies: "",
+                cookies: {},
                 httpMethod: "",
                 httpURL: "",
                 contentType: "application/x-www-form-urlencoded",
@@ -233,13 +265,103 @@ export default {
                 tips: "一次最多选择3个文件",
             },
             rspData: "",
+            dbInfo: [{
+                name: "http_info",
+                key: "id"
+            },{
+                name: "clientTree_info",
+                key: "id"
+            }],
+            dialogVisible: false,
+            httpLabel: "",
+            dbHttpInfo: {
+                id: "",
+                name: "",
+                createdAt: "",
+                iterations: [],
+            },
+
         };
     },
 
     methods: {
+        addOne: function(){
+            this.dialogVisible = true;
+        },
+        delOne: function(){
+            this.dialogVisible = true;
+        },
+        addTree: function(){
+            let _this = this;
+            if(_this.httpLabel != null && _this.httpLabel != ""){
+                _this.dialogVisible = false;
+                let data = {id: guuid(), label: _this.httpLabel};
+                //this.httpList.push(data);
+                _this.$store.dispatch("indexedDB/addhttplist", data);
+
+                _this.dbHttpInfo.id = data.id;
+                _this.dbHttpInfo.name = data.label;
+                _this.dbHttpInfo.createdAt = new Date();
+
+                //let db = this.$store.state.indexedDB.db;
+                IndexedDB.putData(_this.db,_this.dbInfo[0].name,_this.dbHttpInfo, function (errData) {
+                    if(errData.length > 0){
+                        console.error("入库失败数据...")
+                        console.error(errData);
+                    }
+                });
+                //let httpList = this.$store.state.indexedDB.httpList;
+                IndexedDB.putDatas(_this.db,_this.dbInfo[1].name, _this.httpList, function (errData) {
+                    if(errData.length > 0){
+                        console.error("入库失败数据...")
+                        console.error(errData);
+                    }
+                });
+            }else {
+                this.$message.error("输入数据不能为空");
+            }
+
+        },
         sendHttpRequest: function() {
             let _this = this;
-            if(_this.bodyRadio == "binary"){
+            if(_this.bodyRadio == "form-data" && _this.bodyList.length>0){
+                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.bodyList);
+                _this.httpBody.contentType = "multipart/form-data";
+            }else if(_this.bodyRadio == "row" && null != _this.bodyText){
+                _this.httpBody.bodyContext = _this.bodyText;
+                _this.httpBody.contentType = _this.contentType.value;
+            }else if(_this.bodyRadio == "x-www-form-urlencoded" && null != _this.bodyText){
+                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.bodyList);
+                _this.httpBody.contentType = "x-www-form-urlencoded";
+            }else {
+                _this.httpBody.contentType = _this.contentType.value;
+            }
+            if(_this.headList.length > 0){
+                _this.httpBody.headers = ObjectUtil.array2Map(_this.headList);
+            }
+            if(_this.ParamList.length > 0){
+                _this.httpBody.params = ObjectUtil.array2Map(_this.ParamList);
+            }
+            _this.httpBody.headers['Content-Type'] = _this.httpBody.contentType;
+            _this.httpBody.headers['DEST_URL'] = _this.httpURL;
+            console.log(_this.httpBody);
+            if(_this.httpMethod == "GET"){
+                axiosGet("/http/httpRequest",
+                    _this.httpBody.headers,
+                    _this.httpBody.params
+                ).then(res => {
+                    console.log(res)
+                });
+            }else if(_this.httpMethod == "POST"){
+                axiosPost("/http/httpRequest",
+                    _this.httpBody.headers,
+                    _this.httpBody.params,
+                    _this.httpBody.bodyContext
+                ).then(res => {
+                    console.log(res)
+                });
+            }
+            /*if(_this.bodyRadio == "binary"){
                 _this.fileUploadParam.data.destUrl = _this.httpURL;
                 _this.fileUploadParam.data.params = _this.ParamList;
                 //_this.fileUploadParam.headers = _this.headList;
@@ -265,14 +387,14 @@ export default {
                 _this.httpBody.httpMethod = _this.httpMethod;
 
                 console.log(_this.httpBody);
-                axiosPost("/httpRequest",
+                axiosPost("/http/httpRequest",
                     {'Content-Type': 'application/json;charset=UTF-8'},
                     null,
                     _this.httpBody
                 ).then(res => {
                     console.log(res)
                 });
-            }
+            }*/
 
         },
         handleNodeClick: function () {
@@ -305,7 +427,31 @@ export default {
         setContent: function () {
             let val = "<java>test</java>"
             this.$refs.aceEditor.setContent(val);
+        },
+        saveDb: function (db) {
+            let _this = this;
+            _this.$store.dispatch("indexedDB/setdb", db);
+            //_this.$store.dispatch("indexedDB/setversion", _this.version);
+            _this.getTree();
+        },
+        getTree: function () {
+            let _this = this;
+            console.log("获取树节点...");
+            console.log(_this.db);
+            //let db = this.$store.state.indexedDB.db;
+            if(_this.db != null){
+                IndexedDB.getdatabycursor(_this.db, _this.dbInfo[1].name).then(res =>{
+                        console.log("查询结果：");
+                        console.log(res);
+                        _this.$store.dispatch("indexedDB/sethttplist", res);
+                    }
+                )
+            }else {
+                _this.$message.error("数据库没有创建");
+            }
+
         }
+
     },
 }
 </script>

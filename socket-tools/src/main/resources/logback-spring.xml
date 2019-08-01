@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<configuration>
+	<!-- 使用application.yml的配置属性 -->
+	<springProperty scope="context" name="appname" source="spring.application.name"/>
+
+	<!-- 定义日志文件 输入位置 -->
+	<property name="log_dir" value="." />
+	
+	<!-- 引用现有配置 -->
+	<include resource="org/springframework/boot/logging/logback/defaults.xml" />
+	<!-- 控制台 -->
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
+			<!--<pattern>%d{yyyy-MM-dd HH:mm:ss} [%class:%line] - %m%n</pattern>-->
+
+		</encoder>
+		<!--<layout class="ch.qos.logback.classic.PatternLayout">
+			&lt;!&ndash;
+				日志输出格式：%d表示日期时间，%thread表示线程名，%-5level：级别从左显示5个字符宽度
+				%logger{50} 表示logger名字最长50个字符，否则按照句点分割。 %msg：日志消息，%n是换行符
+        	&ndash;&gt;
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+		</layout>-->
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<!-- 过滤的级别 -->
+			<level>INFO</level>
+			<!-- 匹配时的操作：接收（记录） -->
+			<onMatch>ACCEPT</onMatch>
+			<!-- 不匹配时的操作：拒绝（不记录） -->
+			<onMismatch>DENY</onMismatch>
+		</filter>
+	</appender>
+
+	<!--<appender name="LOGSTASH"
+		class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+		<destination>10.8.206.62:9601</destination>
+		<encoder
+			class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+			<providers>
+				<timestamp />
+				<pattern>
+					<pattern>
+						{
+						"appname":"${appname}",
+						"thread": "%thread",
+						"level": "%level",
+						"logger_name": "%logger",
+						"message": "%message",
+						"SequenceId": "%mdc{SequenceId}",
+						"throwable":"%throwable"
+						}
+					</pattern>
+				</pattern>
+			</providers>
+		</encoder>
+	</appender>-->
+	
+	<!-- 日志压缩和总体大小配置 -->
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<!-- 日志日常打印文件 -->
+		<file>logs/${appname}.log</file>
+		<!-- 配置日志生成的目录以及生成文件名的规则在logsbak/${appname}-yyyy-MM-dd.0.log.zip -->
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logsbak/${appname}-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+			<maxHistory>180</maxHistory>
+			<totalSizeCap>40GB</totalSizeCap>
+			<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>128MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+		<encoder>
+			<!--<pattern>${CONSOLE_LOG_PATTERN}</pattern>-->
+			<pattern>%d{yyyy-MM-dd HH:mm:ss}[%thread] [%class:%line]%level - %m%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- 文件保存日志的相关配置 -->
+	<appender name="ERROR-OUT"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<!-- 保存日志文件的路径 -->
+		<file>logs/${appname}_error.log</file>
+		<!-- 日志格式 -->
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss}[%thread] [%class:%line]%level - %m%n</pattern>
+		</encoder>
+		<!-- 日志级别过滤器 -->
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<!-- 过滤的级别 -->
+			<level>ERROR</level>
+			<!-- 匹配时的操作：接收（记录） -->
+			<onMatch>ACCEPT</onMatch>
+			<!-- 不匹配时的操作：拒绝（不记录） -->
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<!-- 循环政策：基于时间创建日志文件 -->
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- 日志文件名格式 -->
+			<fileNamePattern>logsbak/${appname}.%d{yyyy-MM-dd}_error.%i.log.zip</fileNamePattern>
+			<!-- 最大保存时间：30天 -->
+			<maxHistory>30</maxHistory>
+			<timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>128MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+	</appender>
+
+	<!--<logger name="com.tools.*" value="DEBUG" />
+	<logger>-->
+
+	<!--用来设置某一个包或者具体的某一个类的日志打印级别、以及指定<appender>。<logger>仅有一个name属性，一个可选的level和一个可选的addtivity属性。
+	name:用来指定受此logger约束的某一个包或者具体的某一个类。
+	level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，还有一个特俗值INHERITED或者同义词NULL，代表强制执行上级的级别。如果未设置此属性，那么当前logger将会继承上级的级别。
+	addtivity:是否向上级logger传递打印信息。默认是true。
+	logger可以包含零个或多个<appender-ref>元素，标识这个appender将会添加到这个logger。如果有多个<appender-ref>元素，日志都会打印到添加的<appender-ref>中-->
+	<logger name="com.tools" level="DEBUG" additivity="false" >
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ERROR-OUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+
+	<root level="INFO">
+		<!--<appender-ref ref="LOGSTASH" />-->
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ERROR-OUT" />
+		<appender-ref ref="FILE" />
+	</root>
+</configuration>

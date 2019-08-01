@@ -42,6 +42,7 @@ public class Server implements Runnable{
         serverSocket=new ServerSocket(port);
 
         System.out.println("***创建监听成功，端口:"+ port);
+        log.info("***创建监听成功，端口:"+ port);
        /**
          * 保存 pool信息，供后续关闭使用
          */
@@ -58,6 +59,7 @@ public class Server implements Runnable{
             //记录客户端的数量
             int count=0;
             System.out.println("***服务器即将启动，等待客户端的连接***");
+            log.info("***服务器即将启动，等待客户端的连接***");
             //循环监听等待客户端的连接
             while(StaticStore.serverMap.get(id)){
                 //serverSocket.setSoTimeout(3000);

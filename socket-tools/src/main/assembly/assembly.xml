@@ -1,0 +1,53 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <!--与pom文件excution id相对应-->
+    <id>1.0</id>
+    <formats>
+        <!--设置assembly包文件格式-->
+        <format>tar.gz</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory> <!-- disable the creation of root's distribution dir in the archive -->
+
+    <fileSets>
+        <!-- config files -->
+        <fileSet>
+            <directory>${basedir}/src/main/resources</directory>
+            <excludes></excludes>
+            <includes>
+                <!--<include>*.properties</include>
+                <include>*.xml</include>-->
+                <include>*.*</include>
+            </includes>
+            <!--设置文件权限-->
+            <fileMode>0644</fileMode>
+            <!--设置配置文件输出的外部文件夹-->
+            <outputDirectory>/config</outputDirectory>
+        </fileSet>
+        <!-- scripts -->
+        <fileSet>
+            <directory>${basedir}/src/main/assembly/bin</directory>
+            <includes>
+                <include>*.sh</include>
+                <include>*.bat</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <!--设置项目相关脚本输出的外部文件夹-->
+            <outputDirectory>/bin</outputDirectory>
+        </fileSet>
+        <!-- executable jar -->
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <!--设置项目jar以及项目依赖的第三方jar输出的外部文件夹-->
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+                <!--注意此处是将项目依赖的第三方jar全部copy至assembly打包出来的目录中
+                如果没有此段，则lib目录是在target目录下，而不会存放于assembly打包的目录中-->
+                <include>/lib/*</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+    </fileSets>
+
+</assembly>
