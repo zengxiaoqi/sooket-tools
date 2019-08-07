@@ -51,11 +51,11 @@
                     </el-col>
                     <!--<el-divider></el-divider>-->
                     <!--<params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" @listChange="listChange"></params-table>-->
-                    <params-table v-if="httpClient.bodyRadio == 'form-data'" :param-list.sync="httpClient.request.formList" ></params-table>
-                    <params-table v-if="httpClient.bodyRadio == 'x-www-form-urlencoded'" :param-list.sync="httpClient.request.bodyList" ></params-table>
+                    <params-table v-show="httpClient.bodyRadio == 'form-data'" :param-list.sync="httpClient.request.formList" ></params-table>
+                    <params-table v-show="httpClient.bodyRadio == 'x-www-form-urlencoded'" :param-list.sync="httpClient.request.bodyList" ></params-table>
                     <!--<el-input v-model="bodyText" v-else-if="bodyRadio == 'row'" type="textarea" rows="10"></el-input>-->
-                    <vue-ace-editor ref="reqEdit" :lang="httpClient.contentType.type" :contentVal.sync="httpClient.request.bodyText" v-else-if="httpClient.bodyRadio == 'row'" ></vue-ace-editor>
-                    <file-upload v-else-if="httpClient.bodyRadio == 'binary'"
+                    <vue-ace-editor ref="reqEdit" :lang="httpClient.contentType.type" :contentVal.sync="httpClient.request.bodyText" v-show="httpClient.bodyRadio == 'row'" ></vue-ace-editor>
+                    <file-upload v-show="httpClient.bodyRadio == 'binary'"
                                  ref="uploadFile"
                                  :headers="fileUploadParam.headers"
                                  :data="fileUploadParam.data"
@@ -270,7 +270,7 @@ export default {
                 name: "Raw",
                 value: "Raw",
             },],
-            respRadio: "",
+            respRadio: "Pretty",
             radioType: "button",
             respTabName: "Body",
             respHeadList: [],
@@ -362,13 +362,13 @@ export default {
                     headList: [],
                     formList: [],
                     bodyList: [],
-                    bodyText: null,
+                    bodyText: "",
                     cookieList: [],
                     beginTime: (new Date()).getTime(),
                 },
                 response: {
                     respHeaders: null,
-                    respData: null,
+                    respData: "",
                     status: null,
                     statusText: null,
                     endTime: 0,
@@ -495,12 +495,15 @@ export default {
                 setTimeout(() => {
                     //设置请求报文内容
                     _this.$refs.reqEdit.setContent(val);
-                }, 10);
+                }, 100);
+                /*_this.$nextTick(() => {
+                    _this.$refs.reqEdit.setContent(val);
+                });*/
             }else {
                 setTimeout(() => {
                     //设置请求报文内容
                     _this.$refs.respEdit.setContent(val);
-                }, 10);
+                }, 100);
             }
         },
         saveDb: function (db) {
