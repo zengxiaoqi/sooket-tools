@@ -1,8 +1,14 @@
 export default {
     //Map转为数组
      map2Array: function(map) {
-        let arr = [...map];
-        return arr;
+         let arry = [];
+         let newObj = {key: null, value: null};
+         for(var key in map){
+             newObj.key = key;
+             newObj.value = map[key];
+             arry.push(newObj);
+         }
+        return arry;
     },
     //数组 转为 Map
      array2Map: function(arr) {

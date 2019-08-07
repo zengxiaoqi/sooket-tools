@@ -28,7 +28,7 @@ export default {
         },
         height: {
             type: Number,
-            default: 100
+            default: 300
         }
     },
     components: {

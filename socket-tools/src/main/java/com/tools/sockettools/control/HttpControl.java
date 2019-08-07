@@ -1,6 +1,7 @@
 package com.tools.sockettools.control;
 
 import com.tools.sockettools.http.common.HTTPRequestUtils;
+import com.tools.sockettools.http.common.ProxyRequestHelper;
 import com.tools.sockettools.http.common.SimpleHostRouting;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
@@ -67,9 +68,12 @@ public class HttpControl {
         MultiValueMap<String, String> headers = revertHeaders(response.getAllHeaders());
         for (Map.Entry<String, List<String>> header : headers.entrySet()) {
             String name = header.getKey();
+            ProxyRequestHelper helper = new ProxyRequestHelper();
             for (String value : header.getValue()) {
-                httpServletResponse.addHeader(name,value);
-
+                if(helper.isIncludedHeader(name)){
+                    httpServletResponse.addHeader(name,value);
+                }
+                log.info("RESPONSE HEADER: >{}:{}", name, value);
                 if (name.equalsIgnoreCase(HttpHeaders.CONTENT_ENCODING)
                         && HTTPRequestUtils.getInstance().isGzipped(value)) {
                     //isOriginResponseGzipped = true;
@@ -80,6 +84,8 @@ public class HttpControl {
                     httpServletResponse.setContentLength(Integer.parseInt(value));
                 }
             }
+
+
         }
 
         is = response.getEntity().getContent();

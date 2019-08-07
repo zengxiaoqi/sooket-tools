@@ -1,7 +1,8 @@
 <template>
     <div>
-        <el-radio-group v-model="radio" @change="selectedRadio(radio)" v-for="radioParam in radios">
-            <el-radio :label="radioParam.value">{{radioParam.name}}</el-radio>
+        <el-radio-group v-model="radio" @change="selectedRadio(radio)" v-for="radioParam in radios" :size="size">
+            <el-radio v-if="radioType == 'radio'" :label="radioParam.value">{{radioParam.name}}</el-radio>
+            <el-radio-button v-else-if="radioType == 'button'" :label="radioParam.value">{{radioParam.name}}</el-radio-button>
         </el-radio-group>
     </div>
 </template>
@@ -22,6 +23,18 @@ export default {
                 return "";
             }
         },
+        radioType: {
+            type: String,
+            default: () => {
+                return "radio";
+            }
+        },
+        size:{
+            type: String,
+            default: () => {
+                return "mini";
+            }
+        }
     },
     data() {
         return {

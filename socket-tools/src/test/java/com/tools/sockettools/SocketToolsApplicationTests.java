@@ -34,4 +34,5 @@ public class SocketToolsApplicationTests {
         config.put("id", "001");
         tcpServerControl.sendRespons(config);
     }
+
 }

@@ -2,3 +2,7 @@ logging:
     config: classpath:logback-spring.xml
     level:
         com.tools: debug
+
+sensitive-headers:
+  customSensitiveHeaders: true
+  ignored-headers: Access-Control-Allow-Credentials, Access-Control-Allow-Origin

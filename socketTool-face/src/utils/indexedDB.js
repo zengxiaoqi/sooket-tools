@@ -72,11 +72,14 @@ export default {
         request.onerror = function () {
             console.error('PUT添加数据报错');
             if (callback && (typeof callback === 'function')) {
-                callback();
+                callback(false);
             }
         };
         request.onsuccess = function (result) {
             console.info('PUT添加数据成功');
+            if (callback && (typeof callback === 'function')) {
+                callback(true);
+            }
         };
     },
     //新增
@@ -87,11 +90,14 @@ export default {
         request.onerror = function () {
             console.error('ADD添加数据报错');
             if (callback && (typeof callback === 'function')) {
-                callback();
+                callback(false);
             }
         };
         request.onsuccess = function (result) {
             console.info('ADD添加数据成功');
+            if (callback && (typeof callback === 'function')) {
+                callback(true);
+            }
         };
     },
     // 插入或新增
@@ -102,12 +108,16 @@ export default {
             console.log(item);
             this.read(db, storename, item.id).then(x => {
                 if (x) {
-                    this.putData(db, storename, item, function () {
-                        errDataList.push(item); //记录失败数据
+                    this.putData(db, storename, item, function (result) {
+                        if(!result){
+                            errDataList.push(item); //记录失败数据
+                        }
                     });
                 } else {
-                    this.addData(db, storename, item, function () {
-                        errDataList.push(item); //记录失败数据
+                    this.addData(db, storename, item, function (result) {
+                        if(!result){
+                            errDataList.push(item); //记录失败数据
+                        }
                     });
                 }
             })
@@ -130,7 +140,6 @@ export default {
             callback();
         }
     },
-    // 通过key获取数据
     read: function (db, storeName, id) {
         var transaction = db.transaction(storeName);
         var objectStore = transaction.objectStore(storeName);
@@ -144,6 +153,23 @@ export default {
                 }
                 else {
                     resolve(false);
+                }
+            }
+        })
+    },
+    // 通过key获取数据
+    getDataById: function (db, storeName, id) {
+        var transaction = db.transaction(storeName);
+        var objectStore = transaction.objectStore(storeName);
+        var indexs = objectStore.index('key_index');
+        var request = indexs.openCursor(IDBKeyRange.only(id));
+        return new Promise((resolve, reject) => {
+            request.onsuccess = function (e) {
+                var cursor = e.target.result;
+                if (cursor) {
+                    resolve(cursor.value);
+                }else {
+                    resolve(null);
                 }
             }
         })

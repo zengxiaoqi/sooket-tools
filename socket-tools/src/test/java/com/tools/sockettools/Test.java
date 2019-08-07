@@ -10,10 +10,9 @@ public class Test {
     public static void main(String[] args){
         Test test = new Test();
         //test.testCreateServer();
-        test.testsendRespons();
+        //test.testsendRespons();
         //test.teststopServer();
-        Integer integer = (Integer)10;
-        Long  l = new Long(10);
+        test.testHttp();
     }
 
     public void testCreateServer(){
@@ -47,5 +46,16 @@ public class Test {
         Map<String,Object> config = new HashMap<>();
         config.put("Address","127.0.0.1:20101");
         byte[] bytes = restTemplate.postForObject("http://127.0.0.1:9001/stopServer",config,byte[].class);
+    }
+
+    public void testHttp(){
+        RestTemplate restTemplate = new RestTemplate();
+
+        Map<String,Object> config = new HashMap<>();
+
+        config.put("port", "20101");
+        config.put("ip", "127.0.0.1");
+        byte[] bytes = restTemplate.postForObject("http://127.0.0.1:9001/http/httpRequest",config,byte[].class);
+        System.out.println(bytes);
     }
 }

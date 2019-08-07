@@ -2,13 +2,14 @@
     <el-row>
         <el-col :span="4">
             <el-button type="primary" size="mini" icon="el-icon-plus" @click="addOne">新增</el-button>
-            <el-button type="primary" size="mini" icon="el-icon-minus" @click="delOne">删除</el-button>
-            <el-tree :data="httpList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>
+            <!--<el-button type="primary" size="mini" icon="el-icon-minus" @click="delOne">删除</el-button>-->
+            <!--<el-tree :data="httpList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>-->
+            <render-tree :data="httpList" @nodeClick="handleNodeClick" @contextmenu.prevent.native="openRightMenu($event)"></render-tree>
         </el-col>
         <el-col :span="20">
             <el-col :span="20">
-                <el-input v-model="httpURL" placeholder="请输入URL">
-                    <el-select  v-model="httpMethod"  placeholder="请选择" slot="prepend">
+                <el-input v-model="httpClient.request.httpURL" placeholder="请输入URL">
+                    <el-select  v-model="httpClient.request.httpMethod"  placeholder="请选择" slot="prepend">
                         <el-option
                             v-for="item in methodOptions"
                             :key="item.value"
@@ -23,23 +24,23 @@
             </el-col>
         </el-col>
         <el-col :span="20">
-            <el-tabs v-model="activeTabName" @tab-click="handleTabClick">
+            <el-tabs v-model="httpClient.activeTabName" @tab-click="handleTabClick">
                 <el-tab-pane label="Params" name="Params">
                     <!--<params-table :param-list.sync="ParamList" @listChange="listChange"></params-table>-->
                     <!--.sync父子组件双向数据绑定-->
-                    <params-table :param-list.sync="ParamList"></params-table>
+                    <params-table :param-list.sync="httpClient.request.ParamList"></params-table>
                 </el-tab-pane>
                 <el-tab-pane label="Headers" name="Headers">
                     <!--<params-table :param-list.sync="headList" @listChange="listChange"></params-table>-->
-                    <params-table :param-list.sync="headList"></params-table>
+                    <params-table :param-list.sync="httpClient.request.headList"></params-table>
                 </el-tab-pane>
                 <el-tab-pane label="Body" name="Body">
                     <el-col :span="20">
                         <!--<radio-group :radios="bodyRadios" @selectRadio="selectRadio"></radio-group>-->
-                        <radio-group :radios="bodyRadios" :selectRadio.sync="bodyRadio"></radio-group>
+                        <radio-group :radios="bodyRadios" :selectRadio.sync="httpClient.bodyRadio"></radio-group>
                     </el-col>
                     <el-col :span="4">
-                        <el-select v-if="bodyRadio=='row'" size="mini" v-model="contentType" placeholder="请选择">
+                        <el-select v-if="httpClient.bodyRadio=='row'" size="mini" v-model="httpClient.contentType" placeholder="请选择">
                             <el-option
                                 v-for="item in contentTypeOpt"
                                 :key="item.value"
@@ -50,10 +51,11 @@
                     </el-col>
                     <!--<el-divider></el-divider>-->
                     <!--<params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" @listChange="listChange"></params-table>-->
-                    <params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" ></params-table>
+                    <params-table v-if="httpClient.bodyRadio == 'form-data'" :param-list.sync="httpClient.request.formList" ></params-table>
+                    <params-table v-if="httpClient.bodyRadio == 'x-www-form-urlencoded'" :param-list.sync="httpClient.request.bodyList" ></params-table>
                     <!--<el-input v-model="bodyText" v-else-if="bodyRadio == 'row'" type="textarea" rows="10"></el-input>-->
-                    <vue-ace-editor :lang="contentType.type" :contentVal.sync="bodyText" v-else-if="bodyRadio == 'row'" ></vue-ace-editor>
-                    <file-upload v-else="bodyRadio == 'binary'"
+                    <vue-ace-editor ref="reqEdit" :lang="httpClient.contentType.type" :contentVal.sync="httpClient.request.bodyText" v-else-if="httpClient.bodyRadio == 'row'" ></vue-ace-editor>
+                    <file-upload v-else-if="httpClient.bodyRadio == 'binary'"
                                  ref="uploadFile"
                                  :headers="fileUploadParam.headers"
                                  :data="fileUploadParam.data"
@@ -64,31 +66,46 @@
                 </el-tab-pane>
                 <el-tab-pane label="Cookie" name="Cookie">
                     <!--<params-table :paramList.sync="cookieList" @listChange="listChange"></params-table>-->
-                    <params-table :paramList.sync="cookieList" ></params-table>
+                    <params-table :paramList.sync="httpClient.request.cookieList" ></params-table>
                 </el-tab-pane>
             </el-tabs>
         </el-col>
         <el-col :span="20" style="float: right">
             <el-divider style="el-divider: el-divider--horizontal" content-position="left">Response</el-divider>
-            <el-button size="mini" style="el-button:el-button--default" @click="highLight=!highLight">高亮</el-button>
-            <!--<el-button size="mini" style="el-button:el-button&#45;&#45;default" @click="highLight=!highLight">文本</el-button>-->
-            <el-select v-show="!highLight" size="mini" v-model="txtType" placeholder="请选择">
-                <el-option
-                    v-for="item in highLightOpt"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
-                </el-option>
-            </el-select>
-            <div v-if="highLight">{{outputValue}}</div>
-            <div v-else>
-                <!--<pre v-highlightjs="outputValue">
-                    <code :class="txtType">
-                    </code>
-                </pre>-->
-                <el-button @click="setContent">高亮显示结果</el-button>
-                <vue-ace-editor ref="aceEditor" :lang="txtType" @editorChange="contentChange" ></vue-ace-editor>
-            </div>
+            <el-tabs v-model="respTabName" @tab-click="handleTabClick">
+                <el-tab-pane label="Body" name="Body">
+                    <el-col :span="4">
+                        <radio-group :radios="respRadios" :selectRadio.sync="respRadio" :radioType="radioType"></radio-group>
+                    </el-col>
+                    <el-col :span="2">
+                        <el-select size="mini" v-model="httpClient.txtType" v-if="respRadio=='Pretty'">
+                            <el-option
+                                v-for="item in highLightOpt"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+
+                    <!-- 显示应答报文体 -->
+                    <vue-ace-editor ref="respEdit" :lang="httpClient.txtType" v-show="respRadio=='Pretty'"></vue-ace-editor>
+                    <el-input type="textarea" :rows="10" v-model="httpClient.response.respDataTxt" v-show="respRadio=='Raw'"></el-input>
+                </el-tab-pane>
+                <el-tab-pane label="Headers" name="Headers">
+                    <el-table :data="httpClient.response.respHeaders" style="width: 100%">
+                        <el-table-column prop="key" label="KEY"></el-table-column>
+                        <el-table-column prop="value" label="VALUE"></el-table-column>
+                    </el-table>
+                </el-tab-pane>
+            </el-tabs>
+            <el-col :span="4">
+                <label>Status: {{this.httpClient.response.status}}  {{this.httpClient.response.statusText}}</label>
+            </el-col>
+            <el-col :span="4">
+                <label>Time: {{this.httpClient.response.times}}ms</label>
+            </el-col>
+
         </el-col>
 
         <el-dialog
@@ -101,6 +118,7 @@
             <el-button @click="dialogVisible = false">取 消</el-button>
             <el-button type="primary" @click="addTree">确 定</el-button>
         </el-dialog>
+        <right-menu :menuItems="menuItems" @onClick="rightMenuClick"></right-menu>
     </el-row>
 </template>
 
@@ -115,10 +133,13 @@ import VueAceEditor from "@/components/VueAceEditor"
 import IndexedDB from "@/utils/indexedDB.js"
 import { guuid } from '@/utils/index.js'
 import { mapGetters,mapState } from "vuex";
+import RenderTree from "./compments/RenderTree";
+import {formateXml} from "../../utils";
+import RightMenu from "./compments/RightMenu"
 
 export default {
     name: "http-client",
-    components: {ParamsTable, RadioGroup, FileUpload,VueAceEditor},
+    components: {RenderTree, ParamsTable, RadioGroup, FileUpload,VueAceEditor, RightMenu},
     comments: { ParamsTable },
 
     mounted() {
@@ -127,15 +148,23 @@ export default {
                         this.$store.state.indexedDB.db,
                         this.dbInfo,this.saveDb);*/
         //this.getTree();
+        //阻止浏览器默认事件
+        document.addEventListener('keydown',this.handleEvent)
     },
     created() {
         //创建数据库和表
         IndexedDB.openDB(this.dbName, this.version, this.db,this.dbInfo,this.saveDb);
     },
     watch: {
-        httpURL: function (val) {
+        httpClient: function (val) {
             //更新数据到 indexedDB
         },
+    },
+    beforeDestroy() {
+        //页面关闭时保存页面数据到indexedDB
+        this.saveAllToDb();
+        //需要销毁事件 防止全局生效
+        document.removeEventListener('keydown', this.handleEvent);
     },
     computed: {
         //...mapGetters(['dbName','db','version']),
@@ -184,14 +213,7 @@ export default {
             },{
                 value: 'html',
                 label: 'HTML'
-            },
-
-            ],
-            contentType: {
-                value: 'text/plain',
-                label: 'TXT(text/plain)',
-                type: "abc"
-            },
+            },],
             contentTypeOpt: [{
                 value: 'text/plain',
                 label: 'TXT(text/plain)',
@@ -218,15 +240,7 @@ export default {
                 type: "javascript"
             },
             ],
-            httpMethod: "GET",
-            httpURL: "",
-            ParamList: [],
-            activeTabName: "Params",
-            multipleSelection: [],
-            currentRow: null,
-            headList: [],
-            bodyList: [],
-            bodyText: null,
+
             httpBody: {
                 headers: {},
                 params: {},
@@ -236,10 +250,6 @@ export default {
                 httpURL: "",
                 contentType: "application/x-www-form-urlencoded",
             },
-            cookieList: [],
-            outputValue: "",
-            txtType: 'abc',
-            highLight: false,
             bodyRadios: [{
                 name: "form-data",
                 value: "form-data",
@@ -253,7 +263,17 @@ export default {
                 name: "binary",
                 value: "binary",
             }],
-            bodyRadio: "form-data",
+            respRadios: [{
+                name: "Pretty",
+                value: "Pretty",
+            },{
+                name: "Raw",
+                value: "Raw",
+            },],
+            respRadio: "",
+            radioType: "button",
+            respTabName: "Body",
+            respHeadList: [],
             fileUploadParam: {
                 headers: null,
                 data: {
@@ -264,7 +284,6 @@ export default {
                 multiple: true,
                 tips: "一次最多选择3个文件",
             },
-            rspData: "",
             dbInfo: [{
                 name: "http_info",
                 key: "id"
@@ -273,22 +292,93 @@ export default {
                 key: "id"
             }],
             dialogVisible: false,
+            highLight: false,
             httpLabel: "",
             dbHttpInfo: {
                 id: "",
                 name: "",
                 createdAt: "",
-                iterations: [],
+                iterations: {},
+            },
+            httpClient: {
+                contentType: {
+                    value: 'text/plain',
+                    label: 'TXT(text/plain)',
+                    type: "abc"
+                },
+                activeTabName: "Params",
+                txtType: 'abc',
+                bodyRadio: "form-data",
+                request:{
+                    httpMethod: "GET",
+                    httpURL: "",
+                    ParamList: [],
+                    headList: [],
+                    bodyList: [],
+                    bodyText: null,
+                    cookieList: [],
+                    beginTime: 0,
+                },
+                response: {
+                    respHeaders: null,
+                    respData: null,
+                    respDataTxt: null,
+                    status: null,
+                    statusText: null,
+                    endTime: 0,
+                    times: -1,
+                    respLength: 0,
+                },
             },
 
+            menuItems: [{
+                name: '复制',
+                func: "copy",
+            },{
+                name: '修改',
+                func: "modify",
+            },{
+                name: '删除',
+                func: "delete",
+            }],
         };
     },
 
     methods: {
-        addOne: function(){
-            this.dialogVisible = true;
+        initHttpClient(){
+            this.httpClient = {
+                contentType: {
+                    value: 'text/plain',
+                    label: 'TXT(text/plain)',
+                    type: "abc"
+                },
+                activeTabName: "Params",
+                txtType: 'abc',
+                bodyRadio: "form-data",
+                request:{
+                    httpMethod: "GET",
+                    httpURL: "",
+                    ParamList: [],
+                    headList: [],
+                    formList: [],
+                    bodyList: [],
+                    bodyText: null,
+                    cookieList: [],
+                    beginTime: (new Date()).getTime(),
+                },
+                response: {
+                    respHeaders: null,
+                    respData: null,
+                    status: null,
+                    statusText: null,
+                    endTime: 0,
+                    times: -1,
+                    respLength: 0,
+                },
+            }
+            return this.httpClient;
         },
-        delOne: function(){
+        addOne: function(){
             this.dialogVisible = true;
         },
         addTree: function(){
@@ -302,10 +392,10 @@ export default {
                 _this.dbHttpInfo.id = data.id;
                 _this.dbHttpInfo.name = data.label;
                 _this.dbHttpInfo.createdAt = new Date();
-
+                _this.dbHttpInfo.iterations = _this.initHttpClient();
                 //let db = this.$store.state.indexedDB.db;
-                IndexedDB.putData(_this.db,_this.dbInfo[0].name,_this.dbHttpInfo, function (errData) {
-                    if(errData.length > 0){
+                IndexedDB.putData(_this.db,_this.dbInfo[0].name,_this.dbHttpInfo, function (result) {
+                    if(!result){
                         console.error("入库失败数据...")
                         console.error(errData);
                     }
@@ -324,109 +414,94 @@ export default {
         },
         sendHttpRequest: function() {
             let _this = this;
-            if(_this.bodyRadio == "form-data" && _this.bodyList.length>0){
-                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.bodyList);
+            if(_this.httpClient.bodyRadio == "form-data" && _this.httpClient.request.formList.length>0){
+                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.httpClient.request.formList);
                 _this.httpBody.contentType = "multipart/form-data";
-            }else if(_this.bodyRadio == "row" && null != _this.bodyText){
-                _this.httpBody.bodyContext = _this.bodyText;
-                _this.httpBody.contentType = _this.contentType.value;
-            }else if(_this.bodyRadio == "x-www-form-urlencoded" && null != _this.bodyText){
-                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.bodyList);
+            }else if(_this.httpClient.bodyRadio == "row" && null != _this.httpClient.request.bodyText){
+                _this.httpBody.bodyContext = _this.httpClient.request.bodyText;
+                _this.httpBody.contentType = _this.httpClient.contentType.value;
+            }else if(_this.httpClient.bodyRadio == "x-www-form-urlencoded" && _this.httpClient.request.bodyList.length>0){
+                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.httpClient.request.bodyList);
                 _this.httpBody.contentType = "x-www-form-urlencoded";
             }else {
-                _this.httpBody.contentType = _this.contentType.value;
+                _this.httpBody.contentType = _this.httpClient.contentType.value;
             }
-            if(_this.headList.length > 0){
-                _this.httpBody.headers = ObjectUtil.array2Map(_this.headList);
+            if(_this.httpClient.request.headList.length > 0){
+                _this.httpBody.headers = ObjectUtil.array2Map(_this.httpClient.request.headList);
             }
-            if(_this.ParamList.length > 0){
-                _this.httpBody.params = ObjectUtil.array2Map(_this.ParamList);
+            if(_this.httpClient.request.ParamList.length > 0){
+                _this.httpBody.params = ObjectUtil.array2Map(_this.httpClient.request.ParamList);
             }
             _this.httpBody.headers['Content-Type'] = _this.httpBody.contentType;
-            _this.httpBody.headers['DEST_URL'] = _this.httpURL;
+            _this.httpBody.headers['DEST_URL'] = _this.httpClient.request.httpURL;
+            _this.httpBody.headers['Access-Control-Allow-Origin'] = "*";
             console.log(_this.httpBody);
-            if(_this.httpMethod == "GET"){
+            _this.httpClient.request.beginTime = (new Date()).getTime();
+            if(_this.httpClient.request.httpMethod == "GET"){
                 axiosGet("/http/httpRequest",
                     _this.httpBody.headers,
                     _this.httpBody.params
                 ).then(res => {
                     console.log(res)
                 });
-            }else if(_this.httpMethod == "POST"){
+            }else if(_this.httpClient.request.httpMethod == "POST"){
                 axiosPost("/http/httpRequest",
                     _this.httpBody.headers,
                     _this.httpBody.params,
                     _this.httpBody.bodyContext
                 ).then(res => {
-                    console.log(res)
+                    console.log(res);
+                    _this.responseControl(res);
+                    //baody显示应答信息
+                    //_this.initContent("response", res.data);
                 });
             }
-            /*if(_this.bodyRadio == "binary"){
-                _this.fileUploadParam.data.destUrl = _this.httpURL;
-                _this.fileUploadParam.data.params = _this.ParamList;
-                //_this.fileUploadParam.headers = _this.headList;
-                _this.$refs.uploadFile.submitUpload();
-            }else {
-                if(_this.headList.length > 0){
-                    _this.httpBody.headers = ObjectUtil.array2Map(_this.headList);
-                }
-                if(_this.ParamList.length > 0){
-                    _this.httpBody.params = ObjectUtil.array2Map(_this.ParamList);
-                }
-                if(_this.bodyRadio == "form-data" && _this.bodyList.length>0){
-                    _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.bodyList);
-                    _this.httpBody.contentType = "multipart/form-data";
-                }else if(_this.bodyRadio == "row" && null != _this.bodyText){
-                    _this.httpBody.bodyContext = _this.bodyText;
-                    _this.httpBody.contentType = _this.contentType;
-                }else if(_this.bodyRadio == "x-www-form-urlencoded" && null != _this.bodyText){
-                    _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.bodyList);
-                    _this.httpBody.contentType = "x-www-form-urlencoded";
-                }
-                _this.httpBody.httpURL = _this.httpURL;
-                _this.httpBody.httpMethod = _this.httpMethod;
-
-                console.log(_this.httpBody);
-                axiosPost("/http/httpRequest",
-                    {'Content-Type': 'application/json;charset=UTF-8'},
-                    null,
-                    _this.httpBody
-                ).then(res => {
-                    console.log(res)
-                });
-            }*/
 
         },
-        handleNodeClick: function () {
+        handleNodeClick: function (data,flag) {
+            console.log("选中的节点为："+data.label);
+            let _this = this;
+            if(flag == "click"){
+                //根据id获取数据中的数据
+                IndexedDB.getDataById(_this.db, _this.dbInfo[0].name, data.id).then(res =>{
+                    if(res != null){
+                        console.log(res.iterations);
+                        _this.httpClient = res.iterations;
+                        _this.dbHttpInfo = res;
+                        //设置请求/应答报文内容
+                        _this.initContent("request",_this.httpClient.request.bodyText);
+                        _this.initContent("response",_this.httpClient.response.respData);
+                    }
+                });
+            }else if(flag == "delete"){
+                console.log("删除数据库中数据，ID："+data.id);
+                IndexedDB.deleteData(_this.db, _this.dbInfo[0].name, data.id, null);
+                IndexedDB.deleteData(_this.db, _this.dbInfo[1].name, data.id, null);
+            }
 
         },
         handleTabClick: function () {
 
         },
-        /*listChange: function(newList) {
-            let _this = this;
-            if(_this.activeTabName == "Params"){
-                _this.ParamList = newList;
-            }else if(_this.activeTabName == "Headers") {
-                _this.headList = newList;
-            }else if(_this.activeTabName == "Body") {
-                _this.bodyList = newList;
-            }else if(_this.activeTabName == "Cookie") {
-                _this.cookieList = newList;
-            }
-        },*/
-        /*selectRadio: function (radio) {
-            this.bodyRadio = radio;
-        },*/
-        contentChange: function (val) {
+
+        /*contentChange: function (val) {
             this.rspData = val;
-        },
-        getBodyText: function(val) {
-            this.bodyText = val;
-        },
-        setContent: function () {
-            let val = "<java>test</java>"
-            this.$refs.aceEditor.setContent(val);
+        },*/
+
+        initContent: function (flag,val) {
+            let _this =this;
+            if(flag == "request"){
+                //setTimeout 解决子组件还未渲染完成的问题，Uncaught (in promise) TypeError: Cannot read property 'setContent' of undefined
+                setTimeout(() => {
+                    //设置请求报文内容
+                    _this.$refs.reqEdit.setContent(val);
+                }, 10);
+            }else {
+                setTimeout(() => {
+                    //设置请求报文内容
+                    _this.$refs.respEdit.setContent(val);
+                }, 10);
+            }
         },
         saveDb: function (db) {
             let _this = this;
@@ -450,7 +525,130 @@ export default {
                 _this.$message.error("数据库没有创建");
             }
 
-        }
+        },
+        handleEvent(event){
+
+            if (event.keyCode === 37) {
+                console.log('拦截到37');
+                //this.switchBno(false);//自己的方法 37=←
+                event.preventDefault();
+                event.returnValue = false;
+                return false;
+            }else if(event.keyCode === 39){
+                console.log('拦截到39');
+                //this.switchBno(true);//39=→
+                event.preventDefault();
+                event.returnValue = false;
+                return false;
+            }else if(event.keyCode === 83 && event.ctrlKey){
+                console.log('拦截到ctrl+s');//ctrl+s
+                this.saveAllToDb();
+                event.preventDefault();
+                event.returnValue = false;
+                return false;
+            }else if(event.keyCode === 81 && event.ctrlKey){
+                console.log('拦截到Q+ctrl');
+                //this.addWatermark();//ctrl+q
+                event.preventDefault();
+                event.returnValue = false;
+                return false;
+            }
+
+        },
+        saveAllToDb: function () {
+            let _this = this;
+            _this.dbHttpInfo.iterations = _this.httpClient;
+            IndexedDB.putData(_this.db,_this.dbInfo[0].name,_this.dbHttpInfo, function (result) {
+                if(!result){
+                    _this.$message.error("数据保存失败");
+                    console.error("入库失败数据...");
+                    console.error(_this.dbHttpInfo);
+                }else {
+                    _this.$message.success("数据保存成功");
+                }
+            });
+        },
+
+        responseControl: function (response) {
+            let _this = this;
+            var responText = "";
+
+            //_this.httpClient.response = response;
+            let header = response.headers;
+
+            _this.httpClient.response.respHeaders = ObjectUtil.map2Array(header);
+
+            console.log("应答报文头：");
+            console.log(header);
+            console.log(_this.httpClient.response.respHeaders);
+
+            let contentType = header["content-type"];
+            if(contentType.indexOf("json") > 0){
+                //格式化输出
+                responText = JSON.stringify(response.data, null, "\t");
+                _this.httpClient.response.respDataTxt = JSON.stringify(response.data);
+                _this.httpClient.txtType = "json";
+            }else if(contentType.indexOf("xml") > 0){
+                responText = formateXml(response.data);
+                _this.httpClient.txtType = "xml";
+                _this.httpClient.response.respDataTxt = response.data;
+            }else {
+                responText = response.data;
+                _this.httpClient.txtType = "abc";
+                _this.httpClient.response.respDataTxt = response.data;
+            }
+            _this.initContent("response", responText);
+
+            /* 设置应答信息 */
+            _this.httpClient.response.respData = responText;
+            _this.httpClient.response.status = response.status;
+            _this.httpClient.response.statusText = response.statusText;
+            _this.httpClient.response.endTime = (new Date()).getTime();
+            _this.httpClient.response.times = _this.httpClient.response.endTime - _this.httpClient.request.beginTime;
+        },
+
+        /**
+         * 打开右键菜单
+         */
+        openRightMenu (e) {
+            console.log("右键点击：");
+            console.log(e);
+            this.$store.commit('rightMenu/SET_VISIBLE', true);
+            this.$store.commit('rightMenu/SET_LEFT', e.clientX);
+            this.$store.commit('rightMenu/SET_TOP', e.clientY);
+        },
+        rightMenuClick(item){
+            let _this = this;
+            if(_this.dbHttpInfo.id != null && _this.dbHttpInfo.id != ''){
+                if(item.func == 'copy'){
+                    _this.copy();
+                }else if(item.func == 'modify'){
+
+                }else if(item.func == 'delete'){
+
+                }
+            }else {
+                _this.$message.warning("请先选择一条数据");
+            }
+        },
+        copy(){
+            let _this = this;
+            /* 保存原数据 */
+            _this.saveAllToDb();
+            //let copyDb = _this.dbHttpInfo;    //对象浅拷贝，dbHttpInfo变化会引起copyDb变
+            let copyDb = Object.assign({}, _this.dbHttpInfo);   //对象深拷贝
+            _this.httpLabel = _this.dbHttpInfo.name + " Copy";
+            _this.addTree();
+            _this.dbHttpInfo.iterations = copyDb.iterations;
+            _this.httpClient = copyDb.iterations;
+            _this.saveAllToDb();
+        },
+        modify(){
+
+        },
+        delete(){
+
+        },
 
     },
 }

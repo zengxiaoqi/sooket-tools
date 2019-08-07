@@ -21,10 +21,13 @@ public class ProxyRequestHelper {
         if (headerNames != null) {
             while (headerNames.hasMoreElements()) {
                 String name = headerNames.nextElement();
-                Enumeration<String> values = request.getHeaders(name);
-                while (values.hasMoreElements()) {
-                    String value = values.nextElement();
-                    headers.add(name, value);
+                //排除跨域头信息
+                if(isIncludedHeader(name)){
+                    Enumeration<String> values = request.getHeaders(name);
+                    while (values.hasMoreElements()) {
+                        String value = values.nextElement();
+                        headers.add(name, value);
+                    }
                 }
             }
         }
@@ -113,6 +116,28 @@ public class ProxyRequestHelper {
 
         UriTemplate template = new UriTemplate("?" + query.toString().substring(1));
         return template.expand(singles).toString();
+    }
+
+    public boolean isIncludedHeader(String headerName) {
+        String name = headerName.toLowerCase();
+        RequestConfigProperties requestConfigProperties = new RequestConfigProperties();
+        if (requestConfigProperties.getIgnoredHeaders().size() > 0) {
+            if (requestConfigProperties.getIgnoredHeaders().contains(name)) {
+                return false;
+            }
+        }
+        switch (name) {
+            case "host":
+            case "connection":
+            case "content-length":
+            case "content-encoding":
+            case "server":
+            case "transfer-encoding":
+            case "x-application-context":
+                return false;
+            default:
+                return true;
+        }
     }
 
 }

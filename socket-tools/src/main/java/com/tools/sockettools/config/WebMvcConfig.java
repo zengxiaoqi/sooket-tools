@@ -14,7 +14,6 @@ import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-
 @Configuration
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
 	@Bean
@@ -42,6 +41,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
 	@Bean
 	public FilterRegistrationBean corsFilter() {
+		/* 解决跨域问题 */
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", buildConfig());
 		FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
