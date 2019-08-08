@@ -4,7 +4,15 @@
             <el-button type="primary" size="mini" icon="el-icon-plus" @click="addOne">新增</el-button>
             <!--<el-button type="primary" size="mini" icon="el-icon-minus" @click="delOne">删除</el-button>-->
             <!--<el-tree :data="httpList" :props="defaultProps" default-expand-all @node-click="handleNodeClick"></el-tree>-->
-            <render-tree :data="httpList" @nodeClick="handleNodeClick" @contextmenu.prevent.native="openRightMenu($event)"></render-tree>
+            <!--<render-tree :data="httpList" @nodeClick="handleNodeClick" @contextmenu.prevent.native="openRightMenu($event)" :props="defaultProps" ></render-tree>-->
+            <el-scrollbar style="height:100%">
+                <edit-tree :treeData="httpList"
+                           ref="editTree"
+                           @nodeClick="handleNodeClick"
+                           @contextmenu.prevent.native="openRightMenu($event)">
+                </edit-tree>
+            </el-scrollbar>
+
         </el-col>
         <el-col :span="20">
             <el-col :span="20">
@@ -136,10 +144,11 @@ import { mapGetters,mapState } from "vuex";
 import RenderTree from "./compments/RenderTree";
 import {formateXml} from "../../utils";
 import RightMenu from "./compments/RightMenu"
+import EditTree from "@/components/EditTree"
 
 export default {
     name: "http-client",
-    components: {RenderTree, ParamsTable, RadioGroup, FileUpload,VueAceEditor, RightMenu},
+    components: {RenderTree, ParamsTable, RadioGroup, FileUpload,VueAceEditor, RightMenu,EditTree},
     comments: { ParamsTable },
 
     mounted() {
@@ -178,10 +187,10 @@ export default {
     },
     data() {
         return {
-
+            currNodeData: null,
             defaultProps: {
-                children: 'children',
-                label: 'label',
+                children: 'child',
+                label: 'name',
                 leaf: 'leaf',
             },
             methodOptions: [{
@@ -385,19 +394,18 @@ export default {
             let _this = this;
             if(_this.httpLabel != null && _this.httpLabel != ""){
                 _this.dialogVisible = false;
-                let data = {id: guuid(), label: _this.httpLabel};
+                let data = {id: guuid(), name: _this.httpLabel};
                 //this.httpList.push(data);
                 _this.$store.dispatch("indexedDB/addhttplist", data);
 
                 _this.dbHttpInfo.id = data.id;
-                _this.dbHttpInfo.name = data.label;
+                _this.dbHttpInfo.name = data.name;
                 _this.dbHttpInfo.createdAt = new Date();
                 _this.dbHttpInfo.iterations = _this.initHttpClient();
                 //let db = this.$store.state.indexedDB.db;
                 IndexedDB.putData(_this.db,_this.dbInfo[0].name,_this.dbHttpInfo, function (result) {
                     if(!result){
-                        console.error("入库失败数据...")
-                        console.error(errData);
+                        console.error("入库失败数据...");
                     }
                 });
                 //let httpList = this.$store.state.indexedDB.httpList;
@@ -459,8 +467,9 @@ export default {
 
         },
         handleNodeClick: function (data,flag) {
-            console.log("选中的节点为："+data.label);
+            console.log("选中的节点为："+data.name);
             let _this = this;
+            _this.currNodeData = data;
             if(flag == "click"){
                 //根据id获取数据中的数据
                 IndexedDB.getDataById(_this.db, _this.dbInfo[0].name, data.id).then(res =>{
@@ -477,6 +486,19 @@ export default {
                 console.log("删除数据库中数据，ID："+data.id);
                 IndexedDB.deleteData(_this.db, _this.dbInfo[0].name, data.id, null);
                 IndexedDB.deleteData(_this.db, _this.dbInfo[1].name, data.id, null);
+            }else if(flag == "update"){
+                console.log("更新数据库中数据，ID："+data.id);
+                IndexedDB.putData(_this.db, _this.dbInfo[1].name, data, function (result) {
+                    if(!result){
+                        console.error("入库失败数据..."+_this.dbInfo[1].name);
+                    }
+                });
+                _this.dbHttpInfo.name = data.name;
+                IndexedDB.putData(_this.db,_this.dbInfo[0].name,_this.dbHttpInfo, function (result) {
+                    if(!result){
+                        console.error("入库失败数据..."+_this.dbInfo[0].name);
+                    }
+                });
             }
 
         },
@@ -626,9 +648,9 @@ export default {
                 if(item.func == 'copy'){
                     _this.copy();
                 }else if(item.func == 'modify'){
-
+                    _this.modify();
                 }else if(item.func == 'delete'){
-
+                    _this.delete();
                 }
             }else {
                 _this.$message.warning("请先选择一条数据");
@@ -647,10 +669,11 @@ export default {
             _this.saveAllToDb();
         },
         modify(){
-
+            let _this = this;
+            _this.$refs.editTree.update(null,_this.currNodeData);
         },
         delete(){
-
+            this.$refs.editTree.remove(null,this.currNodeData);
         },
 
     },

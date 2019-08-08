@@ -2,6 +2,7 @@
     <div class="block">
         <el-tree
             :data="data"
+            :props="defaultProps"
             :show-checkbox="checkbox"
             :node-key="nodeKey"
             :default-expand-all="expand"
@@ -24,22 +25,26 @@ export default {
                 return [];
             }
         },
+        defaultProps: {
+            children: 'child',
+            label: 'name'
+        },
         checkbox: false,
         nodeKey: "1",
         expand: false,
     },
     methods: {
         append(data) {
-            const newChild = { id: id++, label: 'testtest', children: [] };
-            if (!data.children) {
-                this.$set(data, 'children', []);
+            const newChild = { id: id++, name: 'test', child: [] };
+            if (!data.child) {
+                this.$set(data, 'child', []);
             }
-            data.children.push(newChild);
+            data.child.push(newChild);
         },
 
         remove(node, data) {
             const parent = node.parent;
-            const children = parent.data.children || parent.data;
+            const children = parent.data.child || parent.data;
             const index = children.findIndex(d => d.id === data.id);
             children.splice(index, 1);
             //删除数据库信息
@@ -48,7 +53,7 @@ export default {
 
         renderContent(h, { node, data, store }) {
             return ( <span class="custom-tree-node">
-                <span>{node.label}</span>
+                <span>{data.name}</span>
             <span style="right">
             <el-button size="mini" type="text" icon="el-icon-delete" on-click={ () => this.remove(node, data) }></el-button>
             </span>
