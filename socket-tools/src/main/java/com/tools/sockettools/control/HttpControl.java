@@ -1,25 +1,28 @@
 package com.tools.sockettools.control;
 
-import com.tools.sockettools.http.common.HTTPRequestUtils;
-import com.tools.sockettools.http.common.ProxyRequestHelper;
-import com.tools.sockettools.http.common.SimpleHostRouting;
+import com.tools.sockettools.http.common.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.InvalidMediaTypeException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -41,9 +44,37 @@ public class HttpControl {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }*/
-        simpleHostRouting = new SimpleHostRouting();
         CloseableHttpResponse response = null;
-        response = simpleHostRouting.httpForwad(request);
+        simpleHostRouting = new SimpleHostRouting();
+
+        Field requestField = ReflectionUtils.findField(HttpServletRequestWrapper.class,
+                "req", HttpServletRequest.class);
+        Field servletRequestField = ReflectionUtils.findField(ServletRequestWrapper.class,
+                "request", ServletRequest.class);
+        requestField.setAccessible(true);
+        servletRequestField.setAccessible(true);
+
+        Servlet30RequestWrapper newRequest = new Servlet30RequestWrapper(request);
+        if(isFormData(request)){
+            if (newRequest instanceof HttpServletRequestWrapper) {
+                HttpServletRequest wrapped = (HttpServletRequest) ReflectionUtils.getField(requestField, newRequest);
+                FormBodyRequestWrapper wrapper = new FormBodyRequestWrapper(wrapped);
+                ReflectionUtils.setField(requestField, newRequest, wrapper);
+                if (newRequest instanceof ServletRequestWrapper) {
+                    ReflectionUtils.setField(servletRequestField, newRequest, wrapper);
+                }
+                String contentType = wrapper.getContentType();
+                log.info("ContentType[{}]", contentType);
+                Servlet30RequestWrapper sendRequest = wrapper;
+                //sendRequest.getHeaders("")
+                response = simpleHostRouting.httpForwad(sendRequest);
+            }else {
+                FormBodyRequestWrapper wrapper = new FormBodyRequestWrapper(newRequest);
+                response = simpleHostRouting.httpForwad(wrapper);
+            }
+        }else{
+            response = simpleHostRouting.httpForwad(request);
+        }
 
         HttpResponse response1 = null;
         log.info("stastus: {}", response.getStatusLine().getStatusCode());
@@ -61,7 +92,30 @@ public class HttpControl {
         }
     }
 
-    private void setResponse(HttpServletResponse httpServletResponse,HttpResponse response) throws Exception {
+    public boolean  isFormData(HttpServletRequest request){
+        String contentType = request.getContentType();
+        // Don't use this filter on GET method
+        if (contentType == null) {
+            return false;
+        }
+        // Only use this filter for form data and only for multipart data in a
+        // DispatcherServlet handler
+        try {
+            MediaType mediaType = MediaType.valueOf(contentType);
+            return MediaType.APPLICATION_FORM_URLENCODED.includes(mediaType)
+                    || (isDispatcherServletRequest(request)
+                    && MediaType.MULTIPART_FORM_DATA.includes(mediaType));
+        }
+        catch (InvalidMediaTypeException ex) {
+            return false;
+        }
+    }
+    private boolean isDispatcherServletRequest(HttpServletRequest request) {
+        return request.getAttribute(
+                DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE) != null;
+    }
+
+    private void setResponse(HttpServletResponse httpServletResponse, HttpResponse response) throws Exception {
         InputStream is = null;
         OutputStream outStream = httpServletResponse.getOutputStream();
         httpServletResponse.setStatus(response.getStatusLine().getStatusCode());
@@ -100,7 +154,7 @@ public class HttpControl {
         try {
             return new GZIPInputStream(stream);
         }
-        catch (java.util.zip.ZipException | java.io.EOFException ex) {
+        catch (java.util.zip.ZipException | EOFException ex) {
 
             if (stream.getBytesRead()==0) {
                 // stream was empty, return the original "empty" stream

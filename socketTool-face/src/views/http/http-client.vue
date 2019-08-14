@@ -59,7 +59,7 @@
                     </el-col>
                     <!--<el-divider></el-divider>-->
                     <!--<params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" @listChange="listChange"></params-table>-->
-                    <params-table v-show="httpClient.bodyRadio == 'form-data'" :param-list.sync="httpClient.request.formList" ></params-table>
+                    <params-table v-show="httpClient.bodyRadio == 'form-data'" :form-data="true" :param-list.sync="httpClient.request.formList" ></params-table>
                     <params-table v-show="httpClient.bodyRadio == 'x-www-form-urlencoded'" :param-list.sync="httpClient.request.bodyList" ></params-table>
                     <!--<el-input v-model="bodyText" v-else-if="bodyRadio == 'row'" type="textarea" rows="10"></el-input>-->
                     <vue-ace-editor ref="reqEdit" :lang="httpClient.contentType.type" :contentVal.sync="httpClient.request.bodyText" v-show="httpClient.bodyRadio == 'row'" ></vue-ace-editor>

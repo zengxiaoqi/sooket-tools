@@ -64,7 +64,7 @@ public class HTTPRequestUtils {
      * @param sHeaderName a <code>String</code> value
      * @return a <code>String</code> value
      */
-    public String getHeaderValue(HttpServletRequest request,String sHeaderName) {
+    public String getHeaderValue(HttpServletRequest request, String sHeaderName) {
         return request.getHeader(sHeaderName);
     }
 
@@ -74,7 +74,7 @@ public class HTTPRequestUtils {
      * @param sHeaderName a <code>String</code> value
      * @return a <code>String</code> value
      */
-    public String getFormValue(HttpServletRequest request,String sHeaderName) {
+    public String getFormValue(HttpServletRequest request, String sHeaderName) {
         return request.getParameter(sHeaderName);
     }
 
@@ -173,7 +173,7 @@ public class HTTPRequestUtils {
      * @param sName
      * @return
      */
-    public String getValueFromRequestElements(HttpServletRequest request,String sName) {
+    public String getValueFromRequestElements(HttpServletRequest request, String sName) {
         String sValue = null;
         if (getQueryParams(request) != null) {
             final List<String> v = getQueryParams(request).get(sName);

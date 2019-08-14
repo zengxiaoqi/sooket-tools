@@ -5,7 +5,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriTemplate;
-import org.springframework.web.util.UriUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -26,7 +25,11 @@ public class ProxyRequestHelper {
                     Enumeration<String> values = request.getHeaders(name);
                     while (values.hasMoreElements()) {
                         String value = values.nextElement();
-                        headers.add(name, value);
+                        if(name.equals("content-type")){
+                            headers.add(name, request.getContentType());
+                        }else {
+                            headers.add(name, value);
+                        }
                     }
                 }
             }

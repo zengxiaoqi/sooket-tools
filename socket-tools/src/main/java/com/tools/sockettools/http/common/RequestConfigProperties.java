@@ -3,7 +3,6 @@ package com.tools.sockettools.http.common;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.style.ToStringCreator;
-import org.springframework.util.ClassUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
