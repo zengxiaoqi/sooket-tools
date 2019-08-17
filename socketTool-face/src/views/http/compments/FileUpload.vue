@@ -4,7 +4,7 @@
             <el-upload
                 class="upload-demo"
                 ref="upload"
-                action="uploadUrl"
+                :action="this.uploadUrl"
                 :headers="headers"
                 :data="data"
                 :on-preview="handlePreview"
@@ -30,6 +30,7 @@
 export default {
     name: "fileUpload",
     props: {
+        uploadUrl:"",
         headers: {
             type: [String, Object],
             default() {
@@ -60,7 +61,7 @@ export default {
     },
     data(){
         return {
-            uploadUrl: "http://localhost:9001/fileUpload",
+            //uploadUrl: "http://localhost:9001/http/httpRequest",
             //headers: null,  //设置上传的请求头部
             //data: null,     //上传时附带的额外参数
             //limit: 3,

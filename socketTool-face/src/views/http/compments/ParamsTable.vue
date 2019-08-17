@@ -39,7 +39,7 @@
             <el-table-column property="value" label="VALUE">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.value" v-if="formType!='File'" placeholder="value"></el-input>
-                    <el-input v-model="scope.row.value" v-if="formType=='File'" type="file" @change="getFile" placeholder="value"></el-input>
+                    <el-input v-model="scope.row.value" v-if="formType=='File'" type="file" @change="getFile(scope.row.key)" id="upfile"></el-input>
                 </template>
             </el-table-column>
             <el-table-column property="desc" label="DESCRIPTION">
@@ -104,8 +104,9 @@ export default {
             this.$emit('update:paramList', this.paramList); //将this.paramList传递给父组件的:param-list.sync绑定的变量
         },
 
-        getFile(e) {
-            this.$emit("File",e.target.files[0]);
+        getFile(key) {
+            let file = document.getElementById("upfile").files[0];
+            this.$emit("File",key,file);
         },
     }
 }

@@ -59,14 +59,19 @@
                     </el-col>
                     <!--<el-divider></el-divider>-->
                     <!--<params-table v-if="bodyRadio == 'form-data'" :param-list.sync="bodyList" @listChange="listChange"></params-table>-->
-                    <params-table v-show="httpClient.bodyRadio == 'form-data'" :form-data="true" :param-list.sync="httpClient.request.formList" ></params-table>
+                    <params-table v-show="httpClient.bodyRadio == 'form-data'"
+                                  :form-data="true"
+                                  :param-list.sync="httpClient.request.formList"
+                                  @File="addFormDataFile"
+                    ></params-table>
                     <params-table v-show="httpClient.bodyRadio == 'x-www-form-urlencoded'" :param-list.sync="httpClient.request.bodyList" ></params-table>
                     <!--<el-input v-model="bodyText" v-else-if="bodyRadio == 'row'" type="textarea" rows="10"></el-input>-->
                     <vue-ace-editor ref="reqEdit" :lang="httpClient.contentType.type" :contentVal.sync="httpClient.request.bodyText" v-show="httpClient.bodyRadio == 'row'" ></vue-ace-editor>
                     <file-upload v-show="httpClient.bodyRadio == 'binary'"
                                  ref="uploadFile"
-                                 :headers="fileUploadParam.headers"
-                                 :data="fileUploadParam.data"
+                                 :uploadUrl="fileUploadParam.uploadUrl"
+                                 :headers="httpBody.headers"
+                                 :data="httpBody.params"
                                  :limit="fileUploadParam.limit"
                                  :tips="fileUploadParam.tips"
                     >
@@ -145,6 +150,7 @@ import RenderTree from "./compments/RenderTree";
 import {formateXml} from "../../utils";
 import RightMenu from "./compments/RightMenu"
 import EditTree from "@/components/EditTree"
+
 
 export default {
     name: "http-client",
@@ -253,7 +259,7 @@ export default {
             httpBody: {
                 headers: {},
                 params: {},
-                bodyContext: "",
+                bodyContext: new Object(),
                 cookies: {},
                 httpMethod: "",
                 httpURL: "",
@@ -284,6 +290,7 @@ export default {
             respTabName: "Body",
             respHeadList: [],
             fileUploadParam: {
+                uploadUrl: "http://127.0.0.1:9001/http/httpRequest",
                 headers: null,
                 data: {
                     destUrl: "",
@@ -350,6 +357,9 @@ export default {
                 name: '删除',
                 func: "delete",
             }],
+
+            formData: new FormData(),
+
         };
     },
 
@@ -422,8 +432,11 @@ export default {
         },
         sendHttpRequest: function() {
             let _this = this;
+
             if(_this.httpClient.bodyRadio == "form-data" && _this.httpClient.request.formList.length>0){
-                _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.httpClient.request.formList);
+                _this.addFormDataParam(_this.httpClient.request.formList);
+                _this.httpBody.bodyContext = _this.formData;
+                    //_this.httpBody.bodyContext = ObjectUtil.array2Map(_this.httpClient.request.formList);
                 _this.httpBody.contentType = "multipart/form-data";
             }else if(_this.httpClient.bodyRadio == "row" && null != _this.httpClient.request.bodyText){
                 _this.httpBody.bodyContext = _this.httpClient.request.bodyText;
@@ -431,6 +444,8 @@ export default {
             }else if(_this.httpClient.bodyRadio == "x-www-form-urlencoded" && _this.httpClient.request.bodyList.length>0){
                 _this.httpBody.bodyContext = ObjectUtil.array2Map(_this.httpClient.request.bodyList);
                 _this.httpBody.contentType = "x-www-form-urlencoded";
+            }else if(_this.httpClient.bodyRadio == "binary"){
+                _this.httpBody.contentType = "text/plain";
             }else {
                 _this.httpBody.contentType = _this.httpClient.contentType.value;
             }
@@ -453,6 +468,11 @@ export default {
                     console.log(res)
                 });
             }else if(_this.httpClient.request.httpMethod == "POST"){
+                if(_this.httpClient.bodyRadio == "binary"){
+                    console.log("发送binary文件...");
+                    _this.$refs.uploadFile.submitUpload();
+                    return;
+                }
                 axiosPost("/http/httpRequest",
                     _this.httpBody.headers,
                     _this.httpBody.params,
@@ -676,6 +696,17 @@ export default {
             this.$refs.editTree.remove(null,this.currNodeData);
         },
 
+        /* form-data 文件 key-value */
+        addFormDataFile(key, obj){
+            console.log("文件："+key);
+            console.log(obj);
+            this.formData.append(key, obj);
+        },
+        addFormDataParam(params){
+            params.forEach(param =>{
+                this.formData.append(param.key, param.value);
+            });
+        },
     },
 }
 </script>
