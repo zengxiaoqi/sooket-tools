@@ -11,5 +11,5 @@ public class NodeTree extends BaseTree implements Serializable {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private String id; //id
-
+    private String name;
 }

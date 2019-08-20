@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-radio-group v-model="radio" @change="selectedRadio(radio)" v-for="radioParam in radios" :size="size">
+        <el-radio-group v-model="radio" @change="selectedRadio(radio)" v-for="(radioParam,index) in radios" :key="index" :size="size">
             <el-radio v-if="radioType == 'radio'" :label="radioParam.value">{{radioParam.name}}</el-radio>
             <el-radio-button v-else-if="radioType == 'button'" :label="radioParam.value">{{radioParam.name}}</el-radio-button>
         </el-radio-group>

@@ -25,7 +25,7 @@ export function getDefaultContent(h, data, node) {
   return (
     <div class="ly-visible" style="right">
       {
-        (<span >
+        (<span>
           <el-button
             size="mini"
             type="text"

@@ -8,26 +8,26 @@ import java.util.List;
 @Data
 public class BaseTree {
     private String parentId;
-    private List children;
+    private List child;
     private Boolean leaf;
 
     public void setChildren(List<? extends BaseTree> children) {
-        this.children = children;
+        this.child = children;
     }
 
     public void addChildren(BaseTree item) {
-        if(children == null){
-            children = new ArrayList();
+        if(child == null){
+            child = new ArrayList();
         }
-        children.add(item);
+        child.add(item);
     }
 
     public void removeChildren(BaseTree item) {
-        children.remove(item);
+        child.remove(item);
     }
 
     public boolean hasChildren(){
-        return (children != null) && (!children.isEmpty());
+        return (child != null) && (!child.isEmpty());
     }
 
     public Boolean getLeaf() {

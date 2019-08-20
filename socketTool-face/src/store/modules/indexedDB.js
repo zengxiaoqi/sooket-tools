@@ -22,6 +22,7 @@ const mutations = {
     SET_DB: (state, data) => {
         state.db = data;
     },
+
     SET_HTTPLIST: (state, data) => {
         state.httpList = data;
     },

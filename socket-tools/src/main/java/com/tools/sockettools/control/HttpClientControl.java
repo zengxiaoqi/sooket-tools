@@ -29,7 +29,7 @@ import java.util.zip.GZIPInputStream;
 @Slf4j
 @RestController
 @RequestMapping(value="/http")
-public class HttpControl {
+public class HttpClientControl {
 
     private SimpleHostRouting simpleHostRouting;
 

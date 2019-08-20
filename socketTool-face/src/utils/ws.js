@@ -53,6 +53,8 @@ export default {
             let data = JSON.parse(response.data);
             if(data.type == "server-list") {
                 store.dispatch('connect/setServerList', data.message);  //TCP-SERVER tree列表
+            }else if(data.type == "http-server-list") {
+                store.dispatch('connect/setHttpServerList', data.message);  //HTTP-SERVER tree列表
             }
         }
         // socket关闭时触发

@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.tools.sockettools.common.StaticStore.WS_TYPE_SERVERLIST;
+
 /**
  * 基于TCP协议的Socket通信
  * 服务器端
@@ -74,13 +76,13 @@ public class Server implements Runnable{
                 nodeTree.setParentId(id);
                 nodeTree.setId(childId);
                 nodeTree.setLeaf(true);
-                StaticStore.addChildNodeTree(id, nodeTree);
+                StaticStore.addChildNodeTree(StaticStore.nodeTreeList,id, nodeTree,StaticStore.WS_TYPE_SERVERLIST);
 
                 count++;//统计客户端的数量
                 System.out.println("客户端的数量："+count);
             }
             System.out.println("---------监听结束，清理线程---------");
-            StaticStore.deleteChildByParentId(id);
+            StaticStore.deleteChildByParentId(StaticStore.nodeTreeList,id,StaticStore.WS_TYPE_SERVERLIST);
             StaticStore.socketMap.remove(socket);
             StaticStore.connectMap.remove(socket);
             //shutdownAndAwaitTermination(pool);

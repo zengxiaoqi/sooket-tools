@@ -56,8 +56,11 @@
                 }
             },
             defaultProps: {
-                children: 'child',
-                label: 'name'
+                type: Object,
+                default: () => {
+                    return {children: 'child', label: 'name'};
+                }
+
             },
             checkbox: false,
             nodeKey: "1",

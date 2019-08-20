@@ -140,7 +140,7 @@
 import ParamsTable from "./compments/ParamsTable"
 import RadioGroup from "./compments/RadioGroup"
 import FileUpload from "./compments/FileUpload"
-import {axiosGet, axiosPost} from "@/api/axiosApi"
+import {axiosGet, axiosPost, axiosURI, axiosData} from "@/api/axiosApi"
 import ObjectUtil from "@/utils/ObjectUtil.js"
 import VueAceEditor from "@/components/VueAceEditor"
 import IndexedDB from "@/utils/indexedDB.js"
@@ -359,7 +359,7 @@ export default {
             }],
 
             formData: new FormData(),
-
+            url: "/http/httpRequest",
         };
     },
 
@@ -460,20 +460,23 @@ export default {
             _this.httpBody.headers['Access-Control-Allow-Origin'] = "*";
             console.log(_this.httpBody);
             _this.httpClient.request.beginTime = (new Date()).getTime();
-            if(_this.httpClient.request.httpMethod == "GET"){
-                axiosGet("/http/httpRequest",
+            if("GET,DELETE".indexOf(_this.httpClient.request.httpMethod) != -1){
+                axiosURI(_this.url,
+                    _this.httpClient.request.httpMethod,
                     _this.httpBody.headers,
                     _this.httpBody.params
                 ).then(res => {
-                    console.log(res)
+                    console.log(res);
+                    _this.responseControl(res);
                 });
-            }else if(_this.httpClient.request.httpMethod == "POST"){
+            }else if( -1 != "POST,PUT,PATCH".indexOf(_this.httpClient.request.httpMethod)){
                 if(_this.httpClient.bodyRadio == "binary"){
                     console.log("发送binary文件...");
                     _this.$refs.uploadFile.submitUpload();
                     return;
                 }
-                axiosPost("/http/httpRequest",
+                axiosData(_this.url,
+                    _this.httpClient.request.httpMethod,
                     _this.httpBody.headers,
                     _this.httpBody.params,
                     _this.httpBody.bodyContext

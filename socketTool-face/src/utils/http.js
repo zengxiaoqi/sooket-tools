@@ -85,6 +85,49 @@ export function httpPost({
         })
     })
 }
+
+// get delete请求
+export function httpURI({
+                            url,
+                            method,
+                            headers = {},
+                            params = {}
+                        }) {
+    return new Promise((resolve, reject) => {
+        axios({
+            url,
+            method: method,
+            headers,
+            params
+        }).then((res) => {
+            resolve(res)
+        }).catch(err => {
+            reject(err)
+        })
+    })
+}
+// post put patch请求
+export function httpData({
+                             url,
+                             method,
+                             headers = {},
+                             params = {},
+                             data = {},
+                         }) {
+    return new Promise((resolve, reject) => {
+        axios({
+            url,
+            method: method,
+            // 发送的数据
+            data,
+            // url参数
+            params,
+            headers
+        }).then(res => {
+            resolve(res)
+        })
+    })
+}
 /*export function httpPost({
                              url,
                              headers = {},

@@ -36,4 +36,9 @@ public class FileController {
         log.info("文件上传成功...");
         return "ok";
     }
+
+    @RequestMapping(value = "/getUser", method = RequestMethod.GET)
+    public ReturnResult toLoginPage( ) {
+        return ReturnResult.success("{id: '01',name: 'job'}");
+    }
 }

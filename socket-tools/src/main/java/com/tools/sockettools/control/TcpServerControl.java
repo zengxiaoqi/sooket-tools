@@ -125,7 +125,7 @@ public class TcpServerControl {
         StaticStore.serverList.remove(id);
         StaticStore.serverMap.remove(id);
 
-        NodeTree pareNode = StaticStore.getParentNodeById(id);
+        NodeTree pareNode = StaticStore.getParentNodeById(StaticStore.nodeTreeList,id);
         StaticStore.nodeTreeList.remove(pareNode);
 
         returnResult.setData(StaticStore.nodeTreeList);

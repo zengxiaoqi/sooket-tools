@@ -42,3 +42,8 @@
     display: block
   }
 }
+
+/* 高亮显示选中tree节点 使用的地方  不要加scoped*/
+.el-tree-node.is-current > .el-tree-node__content {
+    background-color: #c2d6ea !important;
+}

@@ -1,11 +1,14 @@
 package com.tools.sockettools.common;
 
+import com.tools.sockettools.http.server.HttpListener;
+import com.tools.sockettools.http.server.HttpMessage;
 import com.tools.sockettools.util.JsonUtils;
 import com.tools.sockettools.entity.ClientInfo;
 import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.entity.WebsocketData;
 import com.tools.sockettools.websocket.WebSocket;
+import org.apache.commons.collections.map.HashedMap;
 
 import java.net.Socket;
 import java.util.*;
@@ -14,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class StaticStore {
     public static String WS_TYPE_SERVERLIST = "server-list";
+    public static String WS_TYPE_HttpSERVERLIST = "http-server-list";
     public static String WS_SHOP_ID = "TCP_SERVER";
     public static int MAX_ACCPT_POOL_SIZE = 20;
     /**
@@ -24,11 +28,14 @@ public class StaticStore {
     public static Map<String,ExecutorService> serverPoolMap = new HashMap<>();
     public static Map<String,Boolean> serverMap = new HashMap<>();
     public static Map<Socket,StringBuffer> socketMap = new HashMap<>();
+    public static Map<String,HttpListener> httpServerMap = new HashedMap();
     /**
      * 保存服务监听端口和客户端连接信息
      */
     public static List<NodeTree> nodeTreeList = new ArrayList<NodeTree>();
     public static List<ClientInfo> clientList = new ArrayList<ClientInfo>();
+    public static List<NodeTree> httpServerTree = new ArrayList<NodeTree>();
+    public static List<HttpMessage> httpMessageList = new ArrayList<>();
     /**
      * 保存服务状态信息
      */
@@ -40,58 +47,59 @@ public class StaticStore {
      * @param nodeTree
      */
 
-    public static void addChildNodeTree(String id, NodeTree nodeTree){
+    public static void addChildNodeTree(List<NodeTree> nodeTreeList,String id, NodeTree nodeTree,String msgType){
         for(NodeTree pareNode : nodeTreeList) {
             if(pareNode.getId().equals(id)) {
                 pareNode.addChildren(nodeTree);
-                sendWebSocket(WS_TYPE_SERVERLIST,WS_SHOP_ID,nodeTreeList);
+                sendWebsocket(msgType,nodeTreeList);
             }
         }
     }
 
-    public static  void deleteChildById(String childId){
+    public static  void deleteChildById(List<NodeTree> nodeTreeList,String childId,String msgType){
         /*iterator遍历过程加同步锁，锁住整个arrayList*/
         synchronized (nodeTreeList) {
-            for (NodeTree pareNode : StaticStore.nodeTreeList) {
-                if (null != pareNode.getChildren()) {
-                    Iterator<NodeTree> iterator = pareNode.getChildren().iterator();
+            for (NodeTree pareNode : nodeTreeList) {
+                if (null != pareNode.getChild()) {
+                    Iterator<NodeTree> iterator = pareNode.getChild().iterator();
                     while (iterator.hasNext()) {
                         NodeTree childNode = iterator.next();
                         if (childNode.getId().equals(childId)) {
                             /*iterator.remove() 解决ConcurrentModificationException异常*/
                             iterator.remove();
-                            sendWebSocket(WS_TYPE_SERVERLIST, WS_SHOP_ID, nodeTreeList);
+                            sendWebsocket(msgType,nodeTreeList);
                         }
                     }
-                /*for (Object child : pareNode.getChildren()) {
-                    NodeTree childNode = (NodeTree) child;
-                    if (childNode.getId().equals(childId)) {
-                        pareNode.removeChildren(childNode);
-                        sendWebSocket(WS_TYPE_SERVERLIST, WS_SHOP_ID, nodeTreeList);
-                    }
-                }*/
                 }
             }
         }
 
     }
 
-    public static void deleteChildByParentId(String parentId){
-        for(NodeTree pareNode : StaticStore.nodeTreeList) {
+    public static void deleteChildByParentId(List<NodeTree> nodeTreeList,String parentId,String msgType){
+        for(NodeTree pareNode : nodeTreeList) {
             if(pareNode.getId().equals(parentId)) {
                 pareNode.setChildren(null);
-                sendWebSocket(WS_TYPE_SERVERLIST, WS_SHOP_ID, nodeTreeList);
+                sendWebsocket(msgType, nodeTreeList);
             }
         }
     }
 
-    public static NodeTree getParentNodeById(String parentId){
-        for(NodeTree pareNode : StaticStore.nodeTreeList) {
+    public static NodeTree getParentNodeById(List<NodeTree> nodeTreeList,String parentId){
+        for(NodeTree pareNode : nodeTreeList) {
             if(pareNode.getId().equals(parentId)) {
                 return pareNode;
             }
         }
         return null;
+    }
+
+    public static void sendWebsocket(String msgType,Object obj){
+        if(msgType.equals(WS_TYPE_SERVERLIST)){
+            sendWebSocket(WS_TYPE_SERVERLIST, WS_SHOP_ID, obj);
+        }else if (msgType.equals(WS_TYPE_HttpSERVERLIST)){
+            sendWebSocket(WS_TYPE_HttpSERVERLIST, WS_SHOP_ID, obj);
+        }
     }
 
     public static void sendWebSocket(String msgType, String shopId, Object obj){

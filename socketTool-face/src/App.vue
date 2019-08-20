@@ -35,13 +35,29 @@ export default {
         }
 
         //创建indexedDB数据库
-        /*var db = null;
-        IndexedDB.openDB(store.state.indexedDB.dbName,store.state.indexedDB.version,db,null,function (db) {
+        IndexedDB.openDB(store.state.indexedDB.dbName,
+                        store.state.indexedDB.version,
+                        store.state.indexedDB.db,
+                        this.dbInfo,function (db) {
             console.log("保存DB信息");
             console.log(db);
             store.dispatch("indexedDB/setdb", db);
-        });*/
-    }
+        });
+    },
+    data(){
+        return {
+            dbInfo: [{
+                name: "http_info",
+                key: "id"
+            },{
+                name: "clientTree_info",
+                key: "id"
+            },{
+                name: "http_server_info",
+                key: "id"
+            }],
+        }
+    },
 }
 </script>
 

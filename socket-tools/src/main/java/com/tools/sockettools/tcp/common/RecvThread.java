@@ -52,7 +52,7 @@ public class RecvThread extends Thread {
             System.out.println("socket: "+ socket);
             //删除TcpServerControl.nodeTreeList中对应节点
             String childId = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
-            StaticStore.deleteChildById(childId);
+            StaticStore.deleteChildById(StaticStore.nodeTreeList,childId,StaticStore.WS_TYPE_SERVERLIST);
 
         } catch (IOException e) {
             // TODO Auto-generated catch block

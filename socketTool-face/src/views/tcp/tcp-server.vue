@@ -119,7 +119,7 @@ export default {
             //treeData: [],
             defaultProps: {
                 parentId: 'parentId',
-                children: 'children',
+                children: 'child',
                 label: 'id',
                 isLeaf: 'leaf'
             },
