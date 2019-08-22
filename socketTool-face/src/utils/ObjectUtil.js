@@ -2,8 +2,9 @@ export default {
     //Map转为数组
      map2Array: function(map) {
          let arry = [];
-         let newObj = {key: null, value: null};
+
          for(var key in map){
+             let newObj = {key: null, value: null};
              newObj.key = key;
              newObj.value = map[key];
              arry.push(newObj);

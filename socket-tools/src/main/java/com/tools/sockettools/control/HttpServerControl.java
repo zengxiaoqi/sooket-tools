@@ -7,10 +7,12 @@ import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.http.server.HttpListener;
 import com.tools.sockettools.http.server.HttpMessage;
 import com.tools.sockettools.http.server.HttpServerInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/http")
 public class HttpServerControl {
@@ -48,22 +50,24 @@ public class HttpServerControl {
         ReturnResult returnResult = new ReturnResult();
 
         try {
-            HttpListener httpListener = StaticStore.httpServerMap.get(httpSendRespEntity.getId());;
+            HttpListener httpListener = StaticStore.httpServerMap.get(httpSendRespEntity.getParentId());
             List<HttpServerInfo> httpServerInfoList = httpListener.getHttpServerInfoList();
             for (int i=0; i<httpServerInfoList.size(); i++){
                 if(httpServerInfoList.get(i).getId().equals(httpSendRespEntity.getId())){
-                    httpListener.send(httpServerInfoList.get(i), httpSendRespEntity.getRespStr().getBytes());
+                    httpListener.send(httpServerInfoList.get(i), httpSendRespEntity.getSendMsg().getBytes());
                 }
             }
-            for(HttpMessage httpMessage : StaticStore.httpMessageList){
-                if(httpMessage.getId().equals(httpSendRespEntity.getId()) &&
-                        httpMessage.getParentId().equals(httpSendRespEntity.getParentId())){
-                    httpMessage.setRespMsg(httpSendRespEntity.getRespStr());
-                }
-            }
-            returnResult.setSuccess(true);
+            HttpMessage httpMessage = StaticStore.getHttpMessage(httpSendRespEntity.getParentId(),httpSendRespEntity.getId());
+            if(httpMessage != null){
+                httpMessage.setRespFlag(true);
+                httpMessage.setRespMsg(httpSendRespEntity.getSendMsg());
 
-            returnResult.setData(StaticStore.httpServerMap);
+                returnResult.setSuccess(true);
+                returnResult.setData(httpMessage);
+            }else{
+                returnResult.setSuccess(false);
+                returnResult.setMessage("应答发送成功，没有找到节点对应的信息...");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             returnResult.setSuccess(false);
@@ -81,4 +85,58 @@ public class HttpServerControl {
         returnResult.setData(StaticStore.httpServerTree);
         return returnResult;
     }
+
+    @RequestMapping(value="/getHttpMessage",method = RequestMethod.POST)
+    @ResponseBody
+    public ReturnResult getHttpMessage(@RequestBody NodeTree nodeTree) {
+        ReturnResult returnResult = new ReturnResult();
+        try {
+            HttpMessage httpMessage = StaticStore.getHttpMessage(nodeTree.getParentId(),nodeTree.getId());
+            if(httpMessage != null){
+                returnResult.setSuccess(true);
+                returnResult.setData(httpMessage);
+            }else{
+                returnResult.setSuccess(false);
+                returnResult.setMessage("没有找到节点对应的信息...");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            returnResult.setSuccess(false);
+            returnResult.setMessage("获取节点信息出错："+e.getMessage());
+        }
+
+        return returnResult;
+    }
+
+    @RequestMapping(value="/delHtppNode",method = RequestMethod.POST)
+    @ResponseBody
+    public ReturnResult delHtppNode(@RequestBody NodeTree nodeTree) {
+        ReturnResult returnResult = new ReturnResult();
+        try {
+            if(nodeTree.getLeaf()){
+                log.info("删除子节点信息,parentId[{}], id[{}]", nodeTree.getParentId(),nodeTree.getId());
+                StaticStore.deleteChild(StaticStore.httpServerTree,nodeTree.getParentId(),nodeTree.getId(),StaticStore.WS_TYPE_HttpSERVERLIST);
+                StaticStore.delHttpMessage(nodeTree.getParentId(),nodeTree.getId());
+            }else{
+                log.info("删除根节点信息, id[{}]", nodeTree.getId());
+                HttpListener httpListener = StaticStore.httpServerMap.get(nodeTree.getId());
+                httpListener.close();
+
+                NodeTree pareNode = StaticStore.getParentNodeById(StaticStore.httpServerTree,nodeTree.getId());
+                StaticStore.httpServerTree.remove(pareNode);
+
+                StaticStore.httpServerMap.remove(nodeTree.getId());
+            }
+            returnResult.setSuccess(true);
+            returnResult.setData(StaticStore.httpServerTree);
+        }catch (Exception e){
+            e.printStackTrace();
+            returnResult.setSuccess(false);
+            returnResult.setMessage("删除节点信息出错："+e.getMessage());
+        }
+
+        return returnResult;
+    }
+
+
 }

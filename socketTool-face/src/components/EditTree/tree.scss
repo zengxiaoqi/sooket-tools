@@ -42,6 +42,7 @@
     justify-content: flex-start;
     font-size: 14px;
     padding-right: 8px;
+      width: 100%;
   }
 
   .ly-tree-node > div > span:last-child {
@@ -91,5 +92,15 @@
 
   .el-tree .el-tree-node {
     position: relative;
+      /* 设置display: table解决子节点编辑按钮显示不全的问题 */
+      display: table;
   }
+    .el-tree{
+        position: relative;
+        cursor: default;
+        background: #FFF;
+        color: #606266;
+        /* 显示滚动条 */
+        overflow: scroll;
+    }
 }

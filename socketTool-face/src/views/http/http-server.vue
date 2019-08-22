@@ -2,6 +2,7 @@
     <el-row>
         <el-col :span="4">
             <el-button type="primary" size="mini" icon="el-icon-plus" @click="addHttpServer">新增</el-button>
+
             <el-scrollbar style="height:100%">
                 <edit-tree :treeData="httpServerList"
                            ref="editTree"
@@ -27,13 +28,13 @@
                         <span >{{ scope.row.autoResp }}</span>
                     </template>
                 </el-table-column>
-                <el-table-column class-name="status-col" label="应答报文"  align="center" >
+                <el-table-column label="应答报文"  align="center" >
                     <template slot-scope="scope">
                         <el-input type="textarea" readonly v-if="scope.row.autoResp" >{{ scope.row.respStr }}</el-input>
-                        <el-input type="textarea" v-model="httpMessage.sendMsg" v-else></el-input>
+                        <el-input type="textarea" v-model="httpMessage.respMsg" v-else></el-input>
                     </template>
                 </el-table-column>
-                <el-table-column class-name="status-col" label="操作"  width="100">
+                <el-table-column label="操作"  width="100">
                     <template slot-scope="scope">
                         <el-button type="primary" @click="sendRespon" v-show="!scope.row.autoResp">发送</el-button>
                     </template>
@@ -47,13 +48,13 @@
                         <el-input type="textarea" :rows="10" v-model="httpMessage.recvMsg"></el-input>
                     </el-tab-pane>
                     <el-tab-pane label="Headers" name="Headers">
-                        <el-table :data="httpMessage.recvHeaders" style="width: 100%">
+                        <el-table :data="httpMessage.recvHeaderList" style="width: 100%">
                             <el-table-column prop="key" label="KEY"></el-table-column>
                             <el-table-column prop="value" label="VALUE"></el-table-column>
                         </el-table>
                     </el-tab-pane>
                     <el-tab-pane label="Params" name="Params">
-                        <el-table :data="httpMessage.recvParams" style="width: 100%">
+                        <el-table :data="httpMessage.recvParamList" style="width: 100%">
                             <el-table-column prop="key" label="KEY"></el-table-column>
                             <el-table-column prop="value" label="VALUE"></el-table-column>
                         </el-table>
@@ -140,10 +141,11 @@
 
 <script>
     import EditTree from "@/components/EditTree"
-    import { createServer, getHttpServerTree,sendResp,} from '@/api/http'
+    import { createServer, getHttpServerTree,sendResp,getHttpMessage,delHtppNode} from '@/api/http'
     import { guuid } from '@/utils/index.js'
     import { mapGetters } from "vuex";
     import IndexedDB from "@/utils/indexedDB.js"
+    import ObjectUtil from "@/utils/ObjectUtil.js"
 export default {
     name: "http-server",
     components: {EditTree},
@@ -227,11 +229,13 @@ export default {
                 parentId: null,
                 id: null,
                 recvHeaders: null,
+                recvHeaderList: null,
+                recvParamList: null,
                 recvParams: null,
                 recvMsg: "",
-                sendHeaders: null,
-                checkedHex: null,
-                sendMsg: "",
+                respHeaders: null,
+                respMsg: "",
+                respFlag: null,
             },
         };
     },
@@ -263,16 +267,36 @@ export default {
                             this.$set(this.tableData, 0, {});
                         }
                     });
+                }else{
+                    //获取服务器中请求信息
+                    getHttpMessage(data).then(response => {
+                        console.log("getHttpMessage ok");
+                        console.log(response.data);
+                        _this.httpMessage = response.data;
+                        _this.httpMessage.recvHeaderList = ObjectUtil.map2Array(response.data.recvHeaders);
+                        _this.httpMessage.recvParamList = ObjectUtil.map2Array(response.data.recvParams);
+                    })
                 }
 
             }else if(flag === "delete"){
                 if(!data.leaf){
                     console.log("删除数据库中数据，ID："+data.id);
-                    IndexedDB.deleteData(_this.db, _this.dbInfo[0].name, data.id, null);
+                    IndexedDB.deleteData(_this.db, _this.dbInfo[0].name, data.id, function(){
+                        console.error("删除数据库数据失败.");
+                    });
                 }
-
+                delHtppNode(data).then(response => {
+                    console.log("删除节点信息成功,id:"+data.id);
+                    //_this.$store.dispatch("connect/setHttpServerList", response.data)
+                })
             }else if(flag === "update"){
                 console.log("更新数据库中数据，ID："+data.id);
+                _this.tableData[0].name = data.name;
+                IndexedDB.putData(_this.db, _this.dbInfo[0].name, _this.tableData[0], function (result) {
+                    if(!result){
+                        console.error("入库失败数据...");
+                    }
+                })
             }
         },
         addHttpServer: function (index, row) {
@@ -287,7 +311,8 @@ export default {
         submit() {
             let _this = this;
             _this.editFormModel.id = guuid();
-            _this.tableData[0] = _this.editFormModel;
+            //_this.tableData[0] = _this.editFormModel;
+            this.$set(_this.tableData, 0, _this.editFormModel);
             let model = _this.$refs.editFormModel.model;
             _this.$refs.editFormModel.validate(valid => {
                 if (valid) {
@@ -311,18 +336,17 @@ export default {
         },
         sendRespon: function () {
             let _this = this;
-            if(_this.currNodeData.leaf){
+            if(_this.currNodeData == null || !_this.currNodeData.leaf){
+                _this.$message.warning("请选中一个请求节点!");
+            }else if(_this.currNodeData.leaf){
                 _this.httpMessage.parentId = _this.currNodeData.parentId;
                 _this.httpMessage.id = _this.currNodeData.id;
 
                 sendResp(_this.httpMessage).then(response => {
                     _this.$message.success("发送应答成功");
                     console.log(response);
-                    _this.editFormVisible = false;
-                    _this.$store.dispatch('connect/setHttpServerList', response.data);
+                    //_this.$store.dispatch('connect/setHttpServerList', response.data);
                 });
-            }else{
-                _this.$message.warning("请选中一个请求节点!");
             }
         }
     },

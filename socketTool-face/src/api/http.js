@@ -14,6 +14,23 @@ export function sendResp(data) {
         data
     })
 }
+
+export function getHttpMessage(data) {
+    return request({
+        url: '/http/getHttpMessage',
+        method: 'post',
+        data
+    })
+}
+
+export function delHtppNode(data) {
+    return request({
+        url: '/http/delHtppNode',
+        method: 'post',
+        data
+    })
+}
+
 export function getHttpServerTree(params) {
     return request({
         url: '/http/getHttpServerTree',

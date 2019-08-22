@@ -49,7 +49,8 @@ export default {
 
         // 接收消息时触发
         Socket.onmessage = function (response) {
-            console.log("websocket接收到消息: "+response)
+            console.log("websocket接收到消息: ");
+            console.log(response);
             let data = JSON.parse(response.data);
             if(data.type == "server-list") {
                 store.dispatch('connect/setServerList', data.message);  //TCP-SERVER tree列表

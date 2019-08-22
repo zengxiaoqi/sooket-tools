@@ -11,12 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.collections.map.HashedMap;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.handler.ContextHandlerCollection;
@@ -147,7 +145,7 @@ public class HttpListener extends HttpServlet {
             ProxyRequestHelper requestHelper = new ProxyRequestHelper();
             HttpMessage httpMessage = new HttpMessage(httpServerEntity.getId(),
                     String.valueOf(count.get()),
-                    requestHelper.buildRequestHeaders(req),requestHelper.buildRequestQueryParams(req),
+                    getRequestHeaders(req),getRequestParams(req),
                     new String(reqMsg,this.httpServerEntity.getEncode()));
             StaticStore.httpMessageList.add(httpMessage);
 
@@ -213,5 +211,39 @@ public class HttpListener extends HttpServlet {
             log.error("Http关闭异常," + e.getMessage());
             throw e;
         }
+    }
+
+    public Map<String, String> getRequestHeaders(HttpServletRequest request) {
+        Map<String, String> headers = new HashedMap();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String name = headerNames.nextElement();
+                Enumeration<String> values = request.getHeaders(name);
+                while (values.hasMoreElements()) {
+                    String value = values.nextElement();
+                    headers.put(name, value);
+                }
+
+            }
+        }
+        return headers;
+    }
+
+    public Map<String, String> getRequestParams(HttpServletRequest request) {
+        Map<String, String> params = new HashedMap();
+        Enumeration<String> paramNames = request.getParameterNames();
+        if (paramNames != null) {
+            while (paramNames.hasMoreElements()) {
+                String name = paramNames.nextElement();
+                Enumeration<String> values = request.getHeaders(name);
+                while (values.hasMoreElements()) {
+                    String value = values.nextElement();
+                    params.put(name, value);
+                }
+
+            }
+        }
+        return params;
     }
 }

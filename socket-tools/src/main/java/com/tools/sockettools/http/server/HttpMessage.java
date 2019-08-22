@@ -13,11 +13,14 @@ public class HttpMessage {
     private String recvMsg;
     private Map respHeaders;
     private String respMsg;
+    private boolean respFlag;
 
-    public HttpMessage(String parentId,String id,Map recvHeaders,Map recvParams,String recvMsg){
+    public HttpMessage(String parentId,String id,Map<String,String> recvHeaders,Map<String,String> recvParams,String recvMsg){
         this.parentId = parentId;
+        this.id = id;
         this.recvHeaders = recvHeaders;
         this.recvParams = recvParams;
         this.recvMsg = recvMsg;
+        this.respFlag = false;
     }
 }

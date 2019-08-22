@@ -8,6 +8,7 @@ import com.tools.sockettools.entity.NodeTree;
 import com.tools.sockettools.entity.ServerInfo;
 import com.tools.sockettools.entity.WebsocketData;
 import com.tools.sockettools.websocket.WebSocket;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.map.HashedMap;
 
 import java.net.Socket;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class StaticStore {
     public static String WS_TYPE_SERVERLIST = "server-list";
     public static String WS_TYPE_HttpSERVERLIST = "http-server-list";
@@ -61,6 +63,26 @@ public class StaticStore {
         synchronized (nodeTreeList) {
             for (NodeTree pareNode : nodeTreeList) {
                 if (null != pareNode.getChild()) {
+                    Iterator<NodeTree> iterator = pareNode.getChild().iterator();
+                    while (iterator.hasNext()) {
+                        NodeTree childNode = iterator.next();
+                        if (childNode.getId().equals(childId)) {
+                            /*iterator.remove() 解决ConcurrentModificationException异常*/
+                            iterator.remove();
+                            sendWebsocket(msgType,nodeTreeList);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    public static  void deleteChild(List<NodeTree> nodeTreeList,String parentId,String childId,String msgType){
+        /*iterator遍历过程加同步锁，锁住整个arrayList*/
+        synchronized (nodeTreeList) {
+            for (NodeTree pareNode : nodeTreeList) {
+                if (pareNode.getId().equals(parentId) && null != pareNode.getChild()) {
                     Iterator<NodeTree> iterator = pareNode.getChild().iterator();
                     while (iterator.hasNext()) {
                         NodeTree childNode = iterator.next();
@@ -123,16 +145,6 @@ public class StaticStore {
         }
         return null;
     }
-
-    public static boolean delClientInfoById(String id){
-        for(ClientInfo clientInfo : StaticStore.clientList){
-            if(clientInfo.getId().equals(id)){
-                return StaticStore.clientList.remove(clientInfo);
-            }
-        }
-        return false;
-    }
-
     public static ClientInfo setClientInfoById(String id, ClientInfo newClientInfo){
         int i=0;
         for(ClientInfo clientInfo : StaticStore.clientList){
@@ -143,6 +155,36 @@ public class StaticStore {
         }
         return null;
     }
+    public static boolean delClientInfoById(String id){
+        for(ClientInfo clientInfo : StaticStore.clientList){
+            if(clientInfo.getId().equals(id)){
+                return StaticStore.clientList.remove(clientInfo);
+            }
+        }
+        return false;
+    }
+
+    public static HttpMessage getHttpMessage(String parentId, String id){
+        int i = 0;
+        for(HttpMessage httpMessage : StaticStore.httpMessageList){
+            if(httpMessage.getId().equals(id) &&
+                    httpMessage.getParentId().equals(parentId)){
+                return httpMessage;
+            }
+            i++;
+        }
+        return null;
+    }
+    public static boolean delHttpMessage(String parentId, String id){
+        for(HttpMessage httpMessage : StaticStore.httpMessageList){
+            if(httpMessage.getParentId().equals(parentId) && httpMessage.getId().equals(id)){
+                return StaticStore.httpMessageList.remove(httpMessage);
+            }
+        }
+        return false;
+    }
+
+
 
     public static void shutdownAndAwaitTermination(ExecutorService pool) {
         pool.shutdown(); // Disable new tasks from being submitted
@@ -152,7 +194,7 @@ public class StaticStore {
                 pool.shutdownNow(); // Cancel currently executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                    System.err.println("Pool did not terminate");
+                    log.error("Pool did not terminate");
                 }
             }
         } catch (InterruptedException ie) {
@@ -161,6 +203,6 @@ public class StaticStore {
             // Preserve interrupt status
             Thread.currentThread().interrupt();
         }
-        System.out.println("-----------线程池清理结束--------");
+        log.info("-----------线程池清理结束--------");
     }
 }
