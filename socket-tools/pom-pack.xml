@@ -132,15 +132,16 @@
 
     <build>
         <!--jar包名字 -->
-        <finalName>socket-tools</finalName>
+        <!--<finalName>socket-tools</finalName>-->
         <!--打包时 排除jar包里面的配置文件，后面会将配置文件打在jar同级的config目录下 -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <excludes>
-                    <!--<exclude>*.properties</exclude>
-                    <exclude>*.xml</exclude>-->
-                    <exclude>*.*</exclude>
+                    <exclude>*.properties</exclude>
+                    <exclude>*.yml</exclude>
+                    <exclude>*.xml</exclude>
+                    <!--<exclude>*.*</exclude>-->
                 </excludes>
                 <filtering>true</filtering>
             </resource>
@@ -157,17 +158,17 @@
                 </configuration>
             </plugin>
             <!--利用maven-jar-plugin插件打jar包 -->
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.6</version>
                 <configuration>
                     <archive>
-                        <!--设置jar依赖的第三方jar的目录前缀 和下放的copy-dependency所设置的目录相对应 -->
+                        &lt;!&ndash;设置jar依赖的第三方jar的目录前缀 和下放的copy-dependency所设置的目录相对应 &ndash;&gt;
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib</classpathPrefix>
-                            <!--配置jar启动类 -->
+                            &lt;!&ndash;配置jar启动类 &ndash;&gt;
                             <mainClass>com.tools.sockettools.SocketToolsApplication</mainClass>
                         </manifest>
                         <manifestEntries>
@@ -181,9 +182,9 @@
                         <exclude>config/**</exclude>
                     </excludes>
                 </configuration>
-            </plugin>
+            </plugin>-->
             <!--设置jar所依赖的三方jar包存放的路径 -->
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>2.7</version>
@@ -202,7 +203,21 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>-->
+
+            <!--springboot打包 如果需要将依赖jar包单独打包则屏蔽该插件 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
+
             <!--利用maven的assembly插件 打包-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -223,6 +238,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 

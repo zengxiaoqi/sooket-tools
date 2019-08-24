@@ -44,7 +44,7 @@
                 <include>*.jar</include>
                 <!--注意此处是将项目依赖的第三方jar全部copy至assembly打包出来的目录中
                 如果没有此段，则lib目录是在target目录下，而不会存放于assembly打包的目录中-->
-                <include>/lib/*</include>
+                <!--<include>/lib/*</include>-->
             </includes>
             <fileMode>0755</fileMode>
         </fileSet>

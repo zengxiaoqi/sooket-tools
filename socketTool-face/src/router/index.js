@@ -27,18 +27,18 @@ export const constantRoutes =[
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/tools/dashboard',
     children: [{
-      path: 'dashboard',
+      path: '/tools/dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
       meta: { title: 'Dashboard', icon: 'dashboard' }
     }]
   },
   {
-    path: '/tcp',
+    path: '/tools/tcp',
     component: Layout,
-    redirect: '/tcp/tcp-server',
+    redirect: '/tools/tcp/tcp-server',
     name: 'TCP',
     meta: { title: 'TCP', icon: 'net' },
     children: [
@@ -57,7 +57,7 @@ export const constantRoutes =[
     ]
   },
     {
-        path: '/http',
+        path: '/tools/http',
         component: Layout,
         redirect: 'noRedirect',
         name: 'HTTP',
@@ -78,9 +78,9 @@ export const constantRoutes =[
         ]
     },
   {
-    path: '/format',
+    path: '/tools/format',
     component: Layout,
-    redirect: '/format/string-format',
+    redirect: '/tools/format/string-format',
     children: [
       {
         path: 'string-format',

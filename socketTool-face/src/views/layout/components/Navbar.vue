@@ -7,7 +7,8 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <img v-bind:src="avatar" class="user-avatar">
+            <!--<img src="/static/img/help.jpg" class="user-avatar">-->
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
@@ -16,18 +17,34 @@
               Home
             </el-dropdown-item>
           </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-admin-template/">
+          <a target="_blank" href="https://github.com/zengxiaoqi/sooket-tools/">
             <el-dropdown-item>Github</el-dropdown-item>
           </a>
-          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
+          <!--<a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
             <el-dropdown-item>Docs</el-dropdown-item>
           </a>
           <el-dropdown-item divided>
             <span style="display:block;" @click="logout">Log Out</span>
-          </el-dropdown-item>
+          </el-dropdown-item>-->
+            <el-dropdown-item divided>
+                <span style="display:block;" @click="about">about</span>
+            </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+
+      <el-dialog
+          title="关于"
+          :visible.sync="aboutVisible"
+          width="30%"
+      >
+          <span>master-tools version 1.0</span>
+          <span slot="footer" class="dialog-footer">
+            <!--<el-button @click="aboutVisible = false">取 消</el-button>-->
+            <el-button type="primary" @click="aboutVisible = false">确 定</el-button>
+          </span>
+      </el-dialog>
+
   </div>
 </template>
 
@@ -39,7 +56,8 @@ import Hamburger from '@/components/Hamburger'
 export default {
   data(){
     return {
-      avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+      avatar: require('@/static/img/help.jpg'),
+        aboutVisible: false,
     }
   },
   components: {
@@ -58,7 +76,10 @@ export default {
     async logout() {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
-    }
+    },
+      about(){
+        this.aboutVisible = true;
+      },
   }
 }
 </script>
