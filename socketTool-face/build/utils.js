@@ -47,6 +47,7 @@ exports.cssLoaders = function (options) {
     if (options.extract) {
       return ExtractTextPlugin.extract({
         use: loaders,
+          publicPath:'../../',           //解决ele小图标出不来问题
         fallback: 'vue-style-loader'
       })
     } else {

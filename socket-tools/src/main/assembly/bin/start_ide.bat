@@ -15,4 +15,4 @@ call stop_ide.bat 2>stdout.log
 
 echo stop over
 
-"%JAVA_CMD%" -jar socket-tools.jar >>stdout.log
+"%JAVA_CMD%" -jar socket-tools-0.0.1-SNAPSHOT.jar >>stdout.log

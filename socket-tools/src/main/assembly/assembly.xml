@@ -33,7 +33,7 @@
             </includes>
             <fileMode>0755</fileMode>
             <!--设置项目相关脚本输出的外部文件夹-->
-            <outputDirectory>/bin</outputDirectory>
+            <outputDirectory>/</outputDirectory>
         </fileSet>
         <!-- executable jar -->
         <fileSet>
