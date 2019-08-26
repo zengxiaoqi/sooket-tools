@@ -6,3 +6,7 @@ mvn install -DskipTests -f pom-pack.xml
 
 --前后端打包成一个工程需要将前端代码build
 --拷贝前端dist目录下的文件到resources目录下的static目录下
+
+![Image text]()
+
+![截图](/sokcet-tools/socketTool-face/src/assets/clipboard.png) 
