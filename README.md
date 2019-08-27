@@ -14,4 +14,8 @@ electron-ide  --electron 桌面应用工具，可以将前后端打包之后的j
 
 应用界面预览
 
+!["示例图](https://github.com/zengxiaoqi/img-storage/blob/master/clipboard.png)
 
+![截图](E:\code\Java\sooket-tools\socketTool-face\src\assets\clipboard.png) 
+
+![Image text](socketTool-face/src/assets/clipboard.png)
