@@ -6,6 +6,7 @@ import com.tools.sockettools.tcp.common.SendThread;
 import com.tools.sockettools.common.StaticStore;
 import com.tools.sockettools.tcp.server.Server;
 
+import com.tools.sockettools.util.IpUtil;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,8 @@ public class TcpServerControl {
     @RequestMapping(value="/getIP",method = RequestMethod.GET)
     @ResponseBody
     public ReturnResult getIP(HttpServletRequest httpRequest) {
-        return ReturnResult.success((Object)httpRequest.getRemoteAddr());
+        //return ReturnResult.success((Object)httpRequest.getRemoteAddr());
+        return ReturnResult.success((Object)IpUtil.getIpAddress());
     }
 
     @RequestMapping(value="/createServer",method = RequestMethod.POST)
@@ -198,7 +200,7 @@ public class TcpServerControl {
         socket = StaticStore.connectMap.get(id);
         StringBuffer stringBuffer = StaticStore.socketMap.get(socket);
 
-        rspMap.put("ip", socket.getLocalAddress().toString());
+        rspMap.put("ip", socket.getLocalAddress().getHostAddress());
         rspMap.put("port", socket.getLocalPort());
         rspMap.put("remoteIp",socket.getInetAddress().getHostAddress());
         rspMap.put("remotePort",socket.getPort());

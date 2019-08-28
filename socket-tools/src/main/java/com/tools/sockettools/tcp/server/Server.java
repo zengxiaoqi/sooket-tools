@@ -66,6 +66,9 @@ public class Server implements Runnable{
             while(StaticStore.serverMap.get(id)){
                 //serverSocket.setSoTimeout(3000);
                 socket = serverSocket.accept();
+                /*System.out.println("getRemoteSocketAddress : " + socket.getRemoteSocketAddress().toString());
+                System.out.println("getInetAddress : " + socket.getInetAddress().getHostAddress());
+                System.out.println("getLocalAddress : " + socket.getLocalAddress().getHostAddress());*/
 
                 pool.execute(new RecvThread(socket,encode));
 
